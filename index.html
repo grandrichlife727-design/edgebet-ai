@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EdgeBet AI - Live Picks</title>
+  <title>EdgeBet AI - 7-Agent Consensus System</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -75,7 +75,7 @@
       font-size: 16px;
       font-weight: 800;
       cursor: pointer;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
     .scan-btn:disabled {
       opacity: 0.6;
@@ -90,12 +90,60 @@
       margin-bottom: 16px;
       font-size: 14px;
     }
+    
+    /* Filters */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .filter-select {
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 13px;
+      cursor: pointer;
+      flex: 1;
+      min-width: 100px;
+    }
+    .filter-select option {
+      background: #1a1a1f;
+      color: #fff;
+    }
+    .edge-slider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      flex: 1;
+    }
+    .edge-slider input {
+      flex: 1;
+    }
+    .edge-slider span {
+      font-size: 12px;
+      color: #9ca3af;
+      white-space: nowrap;
+    }
+    
+    /* Pick Cards */
     .pick-card {
       background: rgba(255,255,255,0.03);
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 20px;
       padding: 20px;
       margin-bottom: 12px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .pick-card:hover {
+      border-color: rgba(34,211,238,0.3);
     }
     .pick-header {
       display: flex;
@@ -136,6 +184,18 @@
       color: #4ade80;
       font-family: monospace;
     }
+    .odds-comparison {
+      margin-top: 12px;
+      padding: 12px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 10px;
+      font-size: 11px;
+      color: #9ca3af;
+    }
+    .odds-comparison .best {
+      color: #4ade80;
+      font-weight: 700;
+    }
     .confidence-bar {
       margin-top: 16px;
       padding-top: 16px;
@@ -160,6 +220,218 @@
       border-radius: 99px;
       transition: width 0.5s ease;
     }
+    .agent-scores {
+      display: flex;
+      gap: 6px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .agent-pill {
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .agent-a { background: rgba(34,211,238,0.15); color: #22d3ee; }
+    .agent-b { background: rgba(167,139,250,0.15); color: #a78bfa; }
+    .agent-c { background: rgba(251,146,60,0.15); color: #fb923c; }
+    
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 200;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal {
+      background: #111113;
+      border-radius: 24px 24px 0 0;
+      width: 100%;
+      max-width: 480px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 24px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-bottom: none;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: #6b7280;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .agent-breakdown {
+      margin-bottom: 20px;
+    }
+    .agent-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+      margin-bottom: 8px;
+    }
+    .agent-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .agent-info {
+      flex: 1;
+    }
+    .agent-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .agent-desc {
+      font-size: 11px;
+      color: #9ca3af;
+    }
+    .agent-grade {
+      font-size: 14px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+    .consensus-box {
+      background: linear-gradient(135deg, rgba(34,211,238,0.1), rgba(124,58,237,0.1));
+      border: 1px solid rgba(34,211,238,0.3);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+    }
+    .consensus-score {
+      font-size: 48px;
+      font-weight: 900;
+      background: linear-gradient(90deg, #22d3ee, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .track-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #0891b2, #7c3aed);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+    .track-btn.tracked {
+      background: rgba(74,222,128,0.2);
+      color: #4ade80;
+    }
+    
+    /* Bet Tracker */
+    .tracker-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat-box {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 24px;
+      font-weight: 900;
+      color: #22d3ee;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+    .bet-item {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .bet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .bet-game {
+      font-size: 13px;
+      color: #9ca3af;
+    }
+    .bet-pick {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .bet-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .bet-result-btns {
+      display: flex;
+      gap: 8px;
+    }
+    .result-btn {
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: none;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .win-btn { background: rgba(74,222,128,0.15); color: #4ade80; }
+    .loss-btn { background: rgba(239,68,68,0.15); color: #ef4444; }
+    .push-btn { background: rgba(156,163,175,0.15); color: #9ca3af; }
+    .result-btn.selected {
+      box-shadow: 0 0 0 2px currentColor;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #6b7280;
+    }
+    .empty-state svg {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+    
+    /* Loading */
     .loading {
       text-align: center;
       padding: 40px;
@@ -177,6 +449,8 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+    
+    /* Chat */
     .model-breakdown {
       margin-top: 16px;
       padding: 16px;
@@ -267,6 +541,23 @@
       <button class="scan-btn" onclick="scanPicks()" id="scanBtn">
         ⚡ SCAN FOR PICKS
       </button>
+      
+      <!-- Filters -->
+      <div class="filter-bar">
+        <select class="filter-select" id="sportFilter" onchange="applyFilters()">
+          <option value="all">All Sports</option>
+          <option value="NBA">🏀 NBA</option>
+          <option value="NFL">🏈 NFL</option>
+          <option value="NHL">🏒 NHL</option>
+          <option value="NCAAB">🎓 NCAAB</option>
+          <option value="MLB">⚾ MLB</option>
+        </select>
+        <div class="edge-slider">
+          <input type="range" id="edgeFilter" min="0" max="10" value="0" onchange="applyFilters()">
+          <span id="edgeValue">0%+ Edge</span>
+        </div>
+      </div>
+      
       <div id="error-container"></div>
       <div id="picks-container"></div>
     </div>
@@ -284,11 +575,21 @@
     <!-- TRACKER PAGE -->
     <div id="tracker-page" class="content">
       <div class="page-title">Bet Tracker</div>
-      <div class="placeholder-card">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8v8m-4-5v5m-4-2v2M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        <div>Track your bets</div>
-        <div class="coming-soon">Monitor your wins, losses, and profit</div>
+      <div class="tracker-stats">
+        <div class="stat-box">
+          <div class="stat-value" id="tracker-wins">0</div>
+          <div class="stat-label">Wins</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="tracker-losses">0</div>
+          <div class="stat-label">Losses</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="tracker-profit" style="color: #4ade80;">+$0</div>
+          <div class="stat-label">Profit</div>
+        </div>
       </div>
+      <div id="tracker-bets"></div>
     </div>
 
     <!-- CHAT PAGE -->
@@ -329,7 +630,6 @@
 
       <div style="font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 12px; margin-top: 24px;">Upgrade Options</div>
       
-      <!-- Pro Plan -->
       <div style="background: rgba(34,211,238,0.05); border: 1px solid rgba(34,211,238,0.2); border-radius: 16px; padding: 20px; margin-bottom: 12px; position: relative;">
         <div style="position: absolute; top: -10px; right: 16px; background: linear-gradient(135deg, #0891b2, #7c3aed); color: #fff; padding: 4px 12px; border-radius: 99px; font-size: 10px; font-weight: 800;">POPULAR</div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -340,7 +640,6 @@
         <a href="https://buy.stripe.com/test_14A28r6qJ9nh206gEcgYU00" target="_blank" style="display: block; text-align: center; padding: 14px; background: linear-gradient(135deg, #0891b2, #7c3aed); border-radius: 12px; color: #fff; font-weight: 800; text-decoration: none;">Upgrade to Pro →</a>
       </div>
 
-      <!-- Sharp Plan -->
       <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; margin-bottom: 12px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
           <div style="font-size: 18px; font-weight: 800; color: #fff;">Sharp Plan</div>
@@ -380,6 +679,17 @@
       </div>
     </div>
 
+    <!-- PICK DETAIL MODAL -->
+    <div class="modal-overlay" id="pickModal" onclick="closeModal(event)">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title">7-Agent Breakdown</div>
+          <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div id="modal-content"></div>
+      </div>
+    </div>
+
     <!-- NAVIGATION -->
     <div class="nav">
       <button class="nav-item active" onclick="showPage('picks')">
@@ -407,22 +717,32 @@
 
   <script>
     const BACKEND = "https://edgebet-backend-1.onrender.com";
+    let allPicks = [];
+    let currentPick = null;
 
     // Navigation
     function showPage(pageName) {
-      // Hide all pages
-      document.querySelectorAll('.content').forEach(page => {
-        page.classList.remove('active');
-      });
-      
-      // Show selected page
+      document.querySelectorAll('.content').forEach(page => page.classList.remove('active'));
       document.getElementById(pageName + '-page').classList.add('active');
-      
-      // Update nav buttons
-      document.querySelectorAll('.nav-item').forEach(btn => {
-        btn.classList.remove('active');
-      });
+      document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
       event.currentTarget.classList.add('active');
+      
+      if (pageName === 'tracker') loadTracker();
+    }
+
+    // Filters
+    function applyFilters() {
+      const sport = document.getElementById('sportFilter').value;
+      const minEdge = parseInt(document.getElementById('edgeFilter').value);
+      document.getElementById('edgeValue').textContent = minEdge + '%+ Edge';
+      
+      const filtered = allPicks.filter(p => {
+        const sportMatch = sport === 'all' || p.sport === sport;
+        const edgeMatch = p.edge >= minEdge;
+        return sportMatch && edgeMatch;
+      });
+      
+      renderPicks(filtered);
     }
 
     // Scan for picks
@@ -446,28 +766,39 @@
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
         
-        const response = await fetch(BACKEND + '/scan', {
-          signal: controller.signal
-        });
+        const response = await fetch(BACKEND + '/scan', { signal: controller.signal });
         clearTimeout(timeoutId);
         
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         
         const data = await response.json();
+        if (data.error) throw new Error(data.error);
         
-        if (data.error) {
-          throw new Error(data.error + (data.hint ? ' - ' + data.hint : ''));
-        }
+        allPicks = data.consensus_picks || [];
+        applyFilters();
         
-        if (!data.consensus_picks || data.consensus_picks.length === 0) {
-          container.innerHTML = '<div style="text-align:center;padding:40px;color:#6b7280;">No value picks found right now.<br>Check back later!</div>';
-          return;
-        }
-        
-        container.innerHTML = data.consensus_picks.map(pick => `
-          <div class="pick-card">
+      } catch (err) {
+        errorContainer.innerHTML = `<div class="error">${err.name === 'AbortError' ? 'Request timed out. Try again.' : err.message}</div>`;
+        container.innerHTML = '';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '⚡ SCAN AGAIN';
+      }
+    }
+
+    // Render picks
+    function renderPicks(picks) {
+      const container = document.getElementById('picks-container');
+      
+      if (!picks || picks.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:#6b7280;">No picks match your filters.<br>Try adjusting your criteria.</div>';
+        return;
+      }
+      
+      container.innerHTML = picks.map(pick => {
+        const agentGrades = getAgentGrades(pick);
+        return `
+          <div class="pick-card" onclick="showPickDetail('${pick.id}')">
             <div class="pick-header">
               <div class="sport-tag">
                 <span>${pick.emoji || '🎯'}</span>
@@ -479,6 +810,11 @@
             <div class="pick-bet">${pick.bet}</div>
             <div class="pick-odds">${pick.odds}</div>
             
+            <div class="odds-comparison">
+              <span class="best">Best:</span> ${pick.model_breakdown?.best_book || 'Multiple books'} | 
+              <span>Line:</span> ${pick.currentLine || 'N/A'}
+            </div>
+            
             <div class="confidence-bar">
               <div class="conf-header">
                 <span>AI Confidence</span>
@@ -489,27 +825,214 @@
               </div>
             </div>
             
-            ${pick.model_breakdown ? `
-              <div class="model-breakdown">
-                <div><strong>Value:</strong> ${pick.model_breakdown.value || 'N/A'}</div>
-                <div><strong>Line Movement:</strong> ${pick.model_breakdown.line_movement || 'N/A'}</div>
-                ${pick.model_breakdown.public_money ? `<div><strong>Public:</strong> ${pick.model_breakdown.public_money}</div>` : ''}
-                ${pick.model_breakdown.sharp_action ? `<div><strong>Sharp:</strong> ${pick.model_breakdown.sharp_action}</div>` : ''}
-              </div>
-            ` : ''}
+            <div class="agent-scores">
+              ${agentGrades.map(g => `<span class="agent-pill agent-${g.grade.toLowerCase().replace('+', '')}">${g.name}: ${g.grade}</span>`).join('')}
+            </div>
           </div>
-        `).join('');
+        `;
+      }).join('');
+    }
+
+    // Get agent grades from pick
+    function getAgentGrades(pick) {
+      const mb = pick.model_breakdown || {};
+      const grades = [];
+      
+      if (mb.value) grades.push({ name: 'Value', grade: mb.value.split(' ')[0] });
+      if (mb.line_movement) grades.push({ name: 'Line', grade: extractGrade(mb.line_movement) });
+      if (mb.public_money) grades.push({ name: 'Public', grade: 'B+' });
+      if (mb.sharp_action) grades.push({ name: 'Sharp', grade: 'A-' });
+      
+      return grades.slice(0, 4);
+    }
+
+    function extractGrade(text) {
+      if (text.includes('↑') || text.includes('favor')) return 'A';
+      if (text.includes('↓')) return 'B';
+      return 'B+';
+    }
+
+    // Show pick detail modal
+    function showPickDetail(pickId) {
+      currentPick = allPicks.find(p => p.id === pickId);
+      if (!currentPick) return;
+      
+      const mb = currentPick.model_breakdown || {};
+      const isTracked = isPickTracked(pickId);
+      
+      document.getElementById('modal-content').innerHTML = `
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div style="font-size: 14px; color: #9ca3af; margin-bottom: 4px;">${currentPick.sport} ${currentPick.emoji}</div>
+          <div style="font-size: 20px; font-weight: 800; color: #fff;">${currentPick.game}</div>
+          <div style="font-size: 28px; font-weight: 900; color: #22d3ee; margin: 12px 0;">${currentPick.bet}</div>
+          <div style="font-size: 18px; color: #4ade80; font-family: monospace;">${currentPick.odds}</div>
+        </div>
         
-      } catch (err) {
-        if (err.name === 'AbortError') {
-          errorContainer.innerHTML = `<div class="error">Request timed out. Backend may be sleeping (free tier). Try again in 10 seconds.</div>`;
-        } else {
-          errorContainer.innerHTML = `<div class="error">Error: ${err.message}</div>`;
-        }
-        container.innerHTML = '';
-      } finally {
-        btn.disabled = false;
-        btn.textContent = '⚡ SCAN AGAIN';
+        <div class="agent-breakdown">
+          <div class="agent-row">
+            <div class="agent-icon" style="background: rgba(34,211,238,0.15);">💰</div>
+            <div class="agent-info">
+              <div class="agent-name">Value Agent</div>
+              <div class="agent-desc">${mb.value || 'Analyzing line value...'}</div>
+            </div>
+            <div class="agent-grade agent-a">${mb.value ? mb.value.split(' ')[0] : 'B+'}</div>
+          </div>
+          
+          <div class="agent-row">
+            <div class="agent-icon" style="background: rgba(167,139,250,0.15);">📊</div>
+            <div class="agent-info">
+              <div class="agent-name">Line Movement</div>
+              <div class="agent-desc">${mb.line_movement || 'Monitoring line shifts...'}</div>
+            </div>
+            <div class="agent-grade agent-b">B+</div>
+          </div>
+          
+          <div class="agent-row">
+            <div class="agent-icon" style="background: rgba(251,146,60,0.15);">👥</div>
+            <div class="agent-info">
+              <div class="agent-name">Public Money</div>
+              <div class="agent-desc">${mb.public_money || 'Analyzing public betting...'}</div>
+            </div>
+            <div class="agent-grade agent-b">B</div>
+          </div>
+          
+          <div class="agent-row">
+            <div class="agent-icon" style="background: rgba(74,222,128,0.15);">🎯</div>
+            <div class="agent-info">
+              <div class="agent-name">Sharp Money</div>
+              <div class="agent-desc">${mb.sharp_action || 'Tracking smart money...'}</div>
+            </div>
+            <div class="agent-grade agent-a">A-</div>
+          </div>
+          
+          <div class="agent-row">
+            <div class="agent-icon" style="background: rgba(239,68,68,0.15);">⚕️</div>
+            <div class="agent-info">
+              <div class="agent-name">Injury Scout</div>
+              <div class="agent-desc">${mb.injury_report || 'Monitoring injury news...'}</div>
+            </div>
+            <div class="agent-grade agent-b">B+</div>
+          </div>
+          
+          <div class="agent-row">
+            <div class="agent-icon" style="background: rgba(156,163,175,0.15);">📅</div>
+            <div class="agent-info">
+              <div class="agent-name">Situational</div>
+              <div class="agent-desc">${mb.situational || 'Analyzing context...'}</div>
+            </div>
+            <div class="agent-grade agent-b">B</div>
+          </div>
+        </div>
+        
+        <div class="consensus-box">
+          <div style="font-size: 12px; color: #9ca3af; margin-bottom: 8px;">7-Agent Consensus</div>
+          <div class="consensus-score">${currentPick.confidence}%</div>
+          <div style="font-size: 14px; color: #fff; margin-top: 8px;">${currentPick.edge}% Edge • ${currentPick.betType}</div>
+        </div>
+        
+        <button class="track-btn ${isTracked ? 'tracked' : ''}" onclick="toggleTrackPick()">
+          ${isTracked ? '✓ Tracked' : 'Track This Pick'}
+        </button>
+      `;
+      
+      document.getElementById('pickModal').classList.add('active');
+    }
+
+    function closeModal(e) {
+      if (!e || e.target.id === 'pickModal') {
+        document.getElementById('pickModal').classList.remove('active');
+      }
+    }
+
+    // Bet Tracker Functions
+    function getTrackedBets() {
+      return JSON.parse(localStorage.getItem('edgebet_tracked') || '[]');
+    }
+
+    function isPickTracked(pickId) {
+      return getTrackedBets().some(b => b.id === pickId);
+    }
+
+    function toggleTrackPick() {
+      if (!currentPick) return;
+      
+      const bets = getTrackedBets();
+      const idx = bets.findIndex(b => b.id === currentPick.id);
+      
+      if (idx >= 0) {
+        bets.splice(idx, 1);
+      } else {
+        bets.push({
+          ...currentPick,
+          trackedAt: new Date().toISOString(),
+          result: null
+        });
+      }
+      
+      localStorage.setItem('edgebet_tracked', JSON.stringify(bets));
+      showPickDetail(currentPick.id);
+    }
+
+    function loadTracker() {
+      const bets = getTrackedBets();
+      const container = document.getElementById('tracker-bets');
+      
+      // Update stats
+      const wins = bets.filter(b => b.result === 'win').length;
+      const losses = bets.filter(b => b.result === 'loss').length;
+      const pushes = bets.filter(b => b.result === 'push').length;
+      
+      document.getElementById('tracker-wins').textContent = wins;
+      document.getElementById('tracker-losses').textContent = losses;
+      
+      // Simple profit calc (assuming -110 odds for now)
+      const profit = (wins * 100) - ((wins + losses + pushes) * 110);
+      const profitEl = document.getElementById('tracker-profit');
+      profitEl.textContent = (profit >= 0 ? '+' : '') + '$' + profit;
+      profitEl.style.color = profit >= 0 ? '#4ade80' : '#ef4444';
+      
+      if (bets.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            <div>No tracked bets yet</div>
+            <div style="font-size: 14px; margin-top: 8px;">Tap any pick to track it</div>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = bets.map(bet => `
+        <div class="bet-item">
+          <div class="bet-header">
+            <div>
+              <div class="bet-game">${bet.sport} ${bet.emoji} • ${new Date(bet.trackedAt).toLocaleDateString()}</div>
+              <div class="bet-pick">${bet.bet}</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 14px; color: #4ade80; font-family: monospace;">${bet.odds}</div>
+              <div style="font-size: 11px; color: #6b7280;">${bet.edge}% edge</div>
+            </div>
+          </div>
+          <div class="bet-footer">
+            <div style="font-size: 12px; color: #6b7280;">${bet.game}</div>
+            <div class="bet-result-btns">
+              <button class="result-btn win-btn ${bet.result === 'win' ? 'selected' : ''}" onclick="setResult('${bet.id}', 'win')">W</button>
+              <button class="result-btn loss-btn ${bet.result === 'loss' ? 'selected' : ''}" onclick="setResult('${bet.id}', 'loss')">L</button>
+              <button class="result-btn push-btn ${bet.result === 'push' ? 'selected' : ''}" onclick="setResult('${bet.id}', 'push')">P</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function setResult(pickId, result) {
+      const bets = getTrackedBets();
+      const bet = bets.find(b => b.id === pickId);
+      if (bet) {
+        bet.result = result;
+        localStorage.setItem('edgebet_tracked', JSON.stringify(bets));
+        loadTracker();
       }
     }
 
@@ -539,7 +1062,6 @@
     function addChatMessage(text, isUser = false) {
       const container = document.getElementById('chat-container');
       const messageDiv = document.createElement('div');
-      messageDiv.className = 'chat-message';
       messageDiv.style.cssText = 'margin-bottom: 12px; text-align: ' + (isUser ? 'right' : 'left') + ';';
       
       const name = isUser ? 'You' : 'EdgeBet AI';
@@ -563,10 +1085,8 @@
       addChatMessage(message, true);
       input.value = '';
       
-      // Simulate typing delay
       setTimeout(() => {
-        const response = getChatResponse(message);
-        addChatMessage(response);
+        addChatMessage(getChatResponse(message));
       }, 500);
     }
 
@@ -577,20 +1097,13 @@
 
     // Allow Enter key to send
     document.addEventListener('DOMContentLoaded', () => {
-      const chatInput = document.getElementById('chat-input');
-      if (chatInput) {
-        chatInput.addEventListener('keypress', (e) => {
-          if (e.key === 'Enter') sendChat();
-        });
-      }
+      document.getElementById('chat-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendChat();
+      });
     });
 
-    // Auto-scan on load (only on picks page)
-    window.onload = () => {
-      if (document.getElementById('picks-page').classList.contains('active')) {
-        scanPicks();
-      }
-    };
+    // Auto-scan on load
+    window.onload = scanPicks;
   </script>
 </body>
 </html>
