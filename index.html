@@ -3,58 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EdgeBet AI - 7-Agent Consensus System</title>
+  <title>EdgeBet AI v4.0 - Complete Betting Platform</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#22d3ee">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
       --accent: #22d3ee;
       --accent2: #a78bfa;
       --success: #4ade80;
       --danger: #ef4444;
       --warning: #fb923c;
+      --bg: #09090b;
+      --card: rgba(255,255,255,0.03);
     }
+    
+    [data-theme="light"] {
+      --bg: #f5f5f5;
+      --card: #ffffff;
+      color: #1a1a1a;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
     body {
-      background: #09090b;
+      background: var(--bg);
       color: #fff;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow-x: hidden;
+      transition: background 0.3s;
     }
+    
     .app {
       max-width: 480px;
       margin: 0 auto;
-      width: 100%;
       min-height: 100vh;
-      background: #09090b;
       position: relative;
     }
     
-    /* Animations */
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
-    }
-    @keyframes shimmer {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
-    }
-    @keyframes slideIn {
-      from { transform: translateX(100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-5px); }
-    }
-    
-    .animate-in { animation: fadeInUp 0.4s ease-out; }
-    .animate-slide { animation: slideIn 0.3s ease-out; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
     
     .header {
       padding: 12px 16px;
@@ -68,83 +59,19 @@
       backdrop-filter: blur(20px);
       z-index: 50;
     }
-    .logo {
-      font-size: 20px;
-      font-weight: 900;
-      background: linear-gradient(90deg, var(--accent), var(--accent2) 60%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .live-badge {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      background: rgba(74,222,128,0.09);
-      border: 1px solid rgba(74,222,128,0.2);
-      border-radius: 99px;
-      padding: 4px 10px;
-      font-size: 11px;
-      color: var(--success);
-    }
-    .live-dot {
-      width: 6px;
-      height: 6px;
-      background: var(--success);
-      border-radius: 50%;
-      animation: pulse 1.5s infinite;
-    }
-    .arb-badge {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      background: linear-gradient(135deg, rgba(251,146,60,0.15), rgba(251,146,60,0.05));
-      border: 1px solid rgba(251,146,60,0.3);
-      border-radius: 99px;
-      padding: 4px 10px;
-      font-size: 11px;
-      color: var(--warning);
-      cursor: pointer;
-      animation: bounce 2s infinite;
-    }
     
-    .content {
-      padding: 16px 16px 100px;
-      display: none;
-      min-height: calc(100vh - 60px);
-    }
-    .content.active {
-      display: block;
-    }
+    .logo { font-size: 20px; font-weight: 900; background: linear-gradient(90deg, var(--accent), var(--accent2) 60%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .live-badge { display: flex; align-items: center; gap: 5px; background: rgba(74,222,128,0.09); border: 1px solid rgba(74,222,128,0.2); border-radius: 99px; padding: 4px 10px; font-size: 11px; color: var(--success); }
+    .live-dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; animation: pulse 1.5s infinite; }
     
-    /* Pull to refresh indicator */
-    .ptr-indicator {
-      text-align: center;
-      padding: 20px;
-      color: #6b7280;
-      font-size: 12px;
-      opacity: 0;
-      transition: opacity 0.2s;
-      height: 0;
-      overflow: hidden;
-    }
-    .ptr-indicator.visible {
-      opacity: 1;
-      height: auto;
-    }
-    .ptr-indicator .spinner {
-      width: 20px;
-      height: 20px;
-      border: 2px solid rgba(255,255,255,0.1);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      display: inline-block;
-      margin-right: 8px;
-      vertical-align: middle;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .content { padding: 16px 16px 100px; display: none; }
+    .content.active { display: block; animation: fadeInUp 0.4s ease-out; }
     
-    .scan-btn {
+    .page-title { font-size: 24px; font-weight: 900; margin-bottom: 20px; }
+    .section-title { font-size: 14px; font-weight: 700; color: #9ca3af; margin: 24px 0 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    
+    /* Buttons */
+    .btn {
       width: 100%;
       padding: 16px;
       background: linear-gradient(135deg, #0891b2, #7c3aed);
@@ -156,635 +83,112 @@
       cursor: pointer;
       margin-bottom: 16px;
       transition: transform 0.2s, box-shadow 0.2s;
-      position: relative;
-      overflow: hidden;
     }
-    .scan-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 30px rgba(34,211,238,0.2);
-    }
-    .scan-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
-    .scan-btn::after {
-      content: '';
-      position: absolute;
-      top: 0; left: -100%;
-      width: 100%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-      transition: left 0.5s;
-    }
-    .scan-btn:hover::after {
-      left: 100%;
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(34,211,238,0.2); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-secondary { background: rgba(255,255,255,0.1); }
+    .btn-success { background: linear-gradient(135deg, #10b981, #059669); }
+    .btn-warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    
+    /* Cards */
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 12px;
+      animation: fadeInUp 0.4s ease-out;
     }
     
-    /* Filters */
-    .filter-bar {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-    }
-    .filter-select {
-      padding: 10px 14px;
+    /* Form Elements */
+    .input-group { margin-bottom: 16px; }
+    .input-group label { display: block; font-size: 13px; color: #9ca3af; margin-bottom: 6px; }
+    .input {
+      width: 100%;
+      padding: 14px 16px;
       background: rgba(255,255,255,0.05);
       border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 10px;
+      border-radius: 12px;
       color: #fff;
-      font-size: 13px;
-      cursor: pointer;
-      flex: 1;
-      min-width: 100px;
+      font-size: 16px;
       transition: border-color 0.2s;
     }
-    .filter-select:hover, .filter-select:focus {
-      border-color: var(--accent);
-      outline: none;
-    }
-    .filter-select option {
-      background: #1a1a1f;
-      color: #fff;
-    }
-    .edge-slider {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 10px;
-      flex: 1;
-    }
-    .edge-slider input {
-      flex: 1;
-      -webkit-appearance: none;
-      height: 4px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 99px;
-      outline: none;
-    }
-    .edge-slider input::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 16px;
-      height: 16px;
-      background: var(--accent);
-      border-radius: 50%;
-      cursor: pointer;
-    }
-    .edge-slider span {
-      font-size: 12px;
-      color: #9ca3af;
-      white-space: nowrap;
-    }
+    .input:focus { border-color: var(--accent); outline: none; }
     
-    /* Skeleton Loading */
-    .skeleton {
-      background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-      border-radius: 8px;
-    }
-    .skeleton-card {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 20px;
-      padding: 20px;
-      margin-bottom: 12px;
-    }
-    .skeleton-line { height: 16px; margin-bottom: 12px; }
-    .skeleton-line.short { width: 60%; }
-    .skeleton-line.tiny { width: 40%; height: 12px; }
-    
-    .error {
-      background: rgba(239,68,68,0.1);
-      border: 1px solid rgba(239,68,68,0.3);
-      color: var(--danger);
-      padding: 16px;
-      border-radius: 12px;
-      margin-bottom: 16px;
-      font-size: 14px;
-      animation: fadeInUp 0.3s ease-out;
-    }
-    .error button {
-      margin-top: 10px;
-      padding: 8px 16px;
-      background: rgba(239,68,68,0.2);
-      border: 1px solid rgba(239,68,68,0.4);
-      border-radius: 8px;
-      color: var(--danger);
-      cursor: pointer;
-      font-size: 12px;
-    }
-    
-    /* Pick Cards */
-    .pick-card {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 20px;
-      padding: 20px;
-      margin-bottom: 12px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      animation: fadeInUp 0.4s ease-out;
-      position: relative;
-    }
-    .pick-card:hover {
-      border-color: rgba(34,211,238,0.3);
-      transform: translateY(-2px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    }
-    .pick-card.arb-highlight {
-      border-color: var(--warning);
-      background: linear-gradient(135deg, rgba(251,146,60,0.05), rgba(255,255,255,0.03));
-    }
-    .pick-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-    .sport-tag {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 13px;
-      color: #9ca3af;
-    }
-    .edge-badge {
-      background: rgba(34,211,238,0.1);
-      border: 1px solid rgba(34,211,238,0.3);
-      color: var(--accent);
-      padding: 4px 10px;
-      border-radius: 99px;
-      font-size: 12px;
-      font-weight: 800;
-    }
-    .arb-flash {
-      background: linear-gradient(135deg, var(--warning), #f59e0b);
-      color: #000;
-      padding: 4px 10px;
-      border-radius: 99px;
-      font-size: 11px;
-      font-weight: 800;
-      animation: pulse 2s infinite;
-    }
-    .game-title {
-      font-size: 15px;
-      color: #6b7280;
-      margin-bottom: 8px;
-    }
-    .pick-bet {
-      font-size: 24px;
-      font-weight: 900;
-      color: #fff;
-      margin-bottom: 4px;
-    }
-    .pick-odds {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--success);
-      font-family: monospace;
-    }
-    .odds-comparison {
-      margin-top: 12px;
-      padding: 12px;
-      background: rgba(0,0,0,0.2);
-      border-radius: 10px;
-      font-size: 11px;
-      color: #9ca3af;
-    }
-    .odds-comparison .best {
-      color: var(--success);
-      font-weight: 700;
-    }
-    
-    /* Sparkline */
-    .sparkline-container {
-      margin-top: 12px;
-      height: 30px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .sparkline {
-      flex: 1;
-      height: 30px;
-    }
-    .sparkline-label {
-      font-size: 10px;
-      color: #6b7280;
-      white-space: nowrap;
-    }
-    
-    .confidence-bar {
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid rgba(255,255,255,0.05);
-    }
-    .conf-header {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      color: #9ca3af;
-      margin-bottom: 6px;
-    }
-    .conf-bar {
-      height: 6px;
-      background: rgba(255,255,255,0.08);
-      border-radius: 99px;
-      overflow: hidden;
-    }
-    .conf-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      border-radius: 99px;
-      transition: width 0.5s ease;
-    }
-    .agent-scores {
-      display: flex;
-      gap: 6px;
-      margin-top: 12px;
-      flex-wrap: wrap;
-    }
-    .agent-pill {
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 10px;
-      font-weight: 700;
-      transition: transform 0.2s;
-    }
-    .agent-pill:hover {
-      transform: scale(1.05);
-    }
-    .agent-a { background: rgba(34,211,238,0.15); color: var(--accent); }
-    .agent-b { background: rgba(167,139,250,0.15); color: var(--accent2); }
-    .agent-c { background: rgba(251,146,60,0.15); color: var(--warning); }
-    
-    /* Share Button */
-    .share-btn {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 8px;
-      padding: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .share-btn:hover {
-      background: rgba(255,255,255,0.1);
-      border-color: var(--accent);
-    }
-    .share-btn svg {
-      width: 16px;
-      height: 16px;
-      color: #9ca3af;
-    }
-    
-    /* Modal */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.85);
-      z-index: 200;
-      display: none;
-      align-items: flex-end;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    .modal-overlay.active {
-      display: flex;
-      opacity: 1;
-    }
-    .modal {
-      background: #111113;
-      border-radius: 24px 24px 0 0;
-      width: 100%;
-      max-width: 480px;
-      max-height: 85vh;
-      overflow-y: auto;
-      padding: 24px;
-      border: 1px solid rgba(255,255,255,0.1);
-      border-bottom: none;
-      transform: translateY(100%);
-      transition: transform 0.3s ease;
-    }
-    .modal-overlay.active .modal {
-      transform: translateY(0);
-    }
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    .modal-title {
-      font-size: 18px;
-      font-weight: 800;
-    }
-    .modal-close {
-      background: none;
-      border: none;
-      color: #6b7280;
-      font-size: 24px;
-      cursor: pointer;
-      transition: color 0.2s;
-    }
-    .modal-close:hover {
-      color: #fff;
-    }
-    .agent-breakdown {
-      margin-bottom: 20px;
-    }
-    .agent-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px;
-      background: rgba(255,255,255,0.03);
-      border-radius: 12px;
-      margin-bottom: 8px;
-      transition: background 0.2s;
-    }
-    .agent-row:hover {
-      background: rgba(255,255,255,0.05);
-    }
-    .agent-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-    }
-    .agent-info {
-      flex: 1;
-    }
-    .agent-name {
-      font-size: 13px;
-      font-weight: 700;
-      color: #fff;
-    }
-    .agent-desc {
-      font-size: 11px;
-      color: #9ca3af;
-    }
-    .agent-grade {
-      font-size: 14px;
-      font-weight: 800;
-      padding: 4px 10px;
-      border-radius: 6px;
-    }
-    .consensus-box {
-      background: linear-gradient(135deg, rgba(34,211,238,0.1), rgba(124,58,237,0.1));
+    /* EV Calculator Specific */
+    .ev-result {
+      background: linear-gradient(135deg, rgba(34,211,238,0.1), rgba(167,139,250,0.1));
       border: 1px solid rgba(34,211,238,0.3);
       border-radius: 16px;
-      padding: 20px;
+      padding: 24px;
       text-align: center;
+      margin-top: 20px;
     }
-    .consensus-score {
-      font-size: 48px;
-      font-weight: 900;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .track-btn {
-      width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, #0891b2, #7c3aed);
-      border: none;
-      border-radius: 12px;
-      color: #fff;
-      font-size: 14px;
-      font-weight: 800;
-      cursor: pointer;
-      margin-top: 16px;
-      transition: all 0.2s;
-    }
-    .track-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 20px rgba(34,211,238,0.2);
-    }
-    .track-btn.tracked {
-      background: rgba(74,222,128,0.2);
-      color: var(--success);
-    }
+    .ev-positive { border-color: var(--success); background: linear-gradient(135deg, rgba(74,222,128,0.1), rgba(74,222,128,0.05)); }
+    .ev-negative { border-color: var(--danger); background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(239,68,68,0.05)); }
+    .ev-grade { font-size: 64px; font-weight: 900; }
+    .ev-grade.a { color: var(--success); }
+    .ev-grade.f { color: var(--danger); }
+    .ev-stat { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .ev-stat:last-child { border-bottom: none; }
     
-    /* Arb Modal */
-    .arb-card {
+    /* Parlay Builder */
+    .parlay-leg {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+      margin-bottom: 8px;
+    }
+    .parlay-leg .input { flex: 1; margin-bottom: 0; }
+    .parlay-remove { background: var(--danger); border: none; border-radius: 8px; padding: 8px 12px; color: #fff; cursor: pointer; }
+    
+    /* Line Shopping */
+    .book-compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .book-cell {
+      text-align: center;
+      padding: 12px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 10px;
+      font-size: 12px;
+    }
+    .book-cell.best { border: 1px solid var(--success); background: rgba(74,222,128,0.05); }
+    .book-name { font-size: 10px; color: #6b7280; margin-bottom: 4px; text-transform: uppercase; }
+    .book-odds { font-size: 14px; font-weight: 700; font-family: monospace; }
+    
+    /* Steam Moves */
+    .steam-card {
       background: linear-gradient(135deg, rgba(251,146,60,0.1), rgba(251,146,60,0.05));
       border: 1px solid rgba(251,146,60,0.3);
       border-radius: 16px;
       padding: 16px;
       margin-bottom: 12px;
     }
-    .arb-profit {
-      font-size: 32px;
-      font-weight: 900;
-      color: var(--warning);
-    }
-    .arb-books {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid rgba(251,146,60,0.2);
-    }
-    .arb-book {
-      text-align: center;
-    }
-    .arb-book-name {
-      font-size: 12px;
-      color: #9ca3af;
-    }
-    .arb-book-odds {
-      font-size: 16px;
-      font-weight: 800;
-      color: #fff;
-    }
+    .steam-indicator { display: inline-block; width: 8px; height: 8px; background: var(--warning); border-radius: 50%; animation: pulse 1s infinite; margin-right: 8px; }
     
-    /* Props Tab */
-    .prop-card {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 12px;
-      cursor: pointer;
-      transition: all 0.2s;
-      animation: fadeInUp 0.4s ease-out;
-    }
-    .prop-card:hover {
-      border-color: var(--accent2);
-    }
-    .prop-player {
-      font-size: 18px;
-      font-weight: 800;
-      color: #fff;
-    }
-    .prop-market {
-      font-size: 12px;
-      color: #9ca3af;
-      margin-bottom: 8px;
-    }
-    .prop-line {
-      font-size: 24px;
-      font-weight: 900;
-      color: var(--accent2);
-    }
-    
-    /* Tracker */
-    .tracker-stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-    .stat-box {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px;
-      padding: 16px;
-      text-align: center;
-      transition: transform 0.2s;
-    }
-    .stat-box:hover {
-      transform: translateY(-2px);
-      border-color: rgba(255,255,255,0.15);
-    }
-    .stat-value {
-      font-size: 28px;
-      font-weight: 900;
-      color: var(--accent);
-      transition: color 0.3s;
-    }
-    .stat-label {
-      font-size: 11px;
-      color: #6b7280;
-      margin-top: 4px;
-    }
-    .bet-item {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 12px;
-      animation: fadeInUp 0.3s ease-out;
-    }
-    .bet-header {
+    /* Weather */
+    .weather-card {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
-    }
-    .bet-game {
-      font-size: 13px;
-      color: #9ca3af;
-    }
-    .bet-pick {
-      font-size: 16px;
-      font-weight: 700;
-      color: #fff;
-    }
-    .bet-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid rgba(255,255,255,0.05);
-    }
-    .bet-result-btns {
-      display: flex;
-      gap: 8px;
-    }
-    .result-btn {
-      padding: 6px 14px;
-      border-radius: 8px;
-      border: none;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .result-btn:hover {
-      transform: scale(1.05);
-    }
-    .win-btn { background: rgba(74,222,128,0.15); color: var(--success); }
-    .loss-btn { background: rgba(239,68,68,0.15); color: var(--danger); }
-    .push-btn { background: rgba(156,163,175,0.15); color: #9ca3af; }
-    .result-btn.selected {
-      box-shadow: 0 0 0 2px currentColor;
-    }
-    
-    /* Empty State */
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: #6b7280;
-    }
-    .empty-state svg {
-      width: 64px;
-      height: 64px;
-      margin-bottom: 16px;
-      opacity: 0.5;
-    }
-    
-    /* Loading */
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: #6b7280;
-    }
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid rgba(255,255,255,0.1);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 16px;
-    }
-    
-    /* Chat */
-    .chat-container {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 20px;
+      gap: 16px;
       padding: 16px;
-      margin-bottom: 16px;
-      height: 400px;
-      overflow-y: auto;
-    }
-    .chat-message {
+      background: rgba(255,255,255,0.03);
+      border-radius: 16px;
       margin-bottom: 12px;
-      animation: fadeInUp 0.3s ease-out;
     }
-    .chat-message.user {
-      text-align: right;
-    }
-    .chat-bubble {
-      display: inline-block;
-      padding: 12px;
-      border-radius: 12px;
-      font-size: 14px;
-      max-width: 80%;
-      word-wrap: break-word;
-    }
-    .chat-bubble.ai {
-      background: rgba(34,211,238,0.1);
-      color: #fff;
-    }
-    .chat-bubble.user {
-      background: rgba(167,139,250,0.1);
-      color: #fff;
-    }
+    .weather-icon { font-size: 40px; }
+    .weather-temp { font-size: 32px; font-weight: 900; }
+    .weather-detail { font-size: 12px; color: #9ca3af; }
+    .weather-impact { margin-top: 8px; padding: 6px 12px; border-radius: 99px; font-size: 11px; font-weight: 700; display: inline-block; }
+    .weather-impact.high { background: rgba(239,68,68,0.15); color: var(--danger); }
+    .weather-impact.medium { background: rgba(251,146,60,0.15); color: var(--warning); }
     
     /* Navigation */
     .nav {
@@ -801,6 +205,7 @@
       justify-content: space-around;
       padding: 10px 0 24px;
       z-index: 100;
+      overflow-x: auto;
     }
     .nav-item {
       display: flex;
@@ -810,71 +215,48 @@
       background: none;
       border: none;
       color: #6b7280;
-      font-size: 10px;
+      font-size: 9px;
       cursor: pointer;
-      padding: 4px 12px;
-      transition: color 0.2s;
-      position: relative;
+      padding: 4px 8px;
+      white-space: nowrap;
+      min-width: 50px;
     }
-    .nav-item:hover, .nav-item.active {
-      color: var(--accent);
-    }
-    .nav-item svg {
-      width: 24px;
-      height: 24px;
-      transition: transform 0.2s;
-    }
-    .nav-item:hover svg {
-      transform: scale(1.1);
-    }
-    .nav-badge {
-      position: absolute;
-      top: 0;
-      right: 8px;
-      width: 8px;
-      height: 8px;
-      background: var(--warning);
-      border-radius: 50%;
-    }
+    .nav-item:hover, .nav-item.active { color: var(--accent); }
+    .nav-item svg { width: 22px; height: 22px; }
     
-    .page-title {
-      font-size: 24px;
-      font-weight: 900;
+    /* Tools Grid */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
       margin-bottom: 20px;
-      color: #fff;
     }
-    .section-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: #9ca3af;
-      margin-bottom: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+    .tool-card {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
     }
+    .tool-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .tool-icon { font-size: 32px; margin-bottom: 8px; }
+    .tool-name { font-size: 13px; font-weight: 700; }
+    .tool-desc { font-size: 11px; color: #6b7280; margin-top: 4px; }
     
-    /* Toast Notification */
-    .toast {
-      position: fixed;
-      bottom: 100px;
-      left: 50%;
-      transform: translateX(-50%) translateY(100px);
-      background: rgba(0,0,0,0.9);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px;
-      padding: 16px 24px;
-      color: #fff;
-      font-size: 14px;
-      z-index: 300;
-      opacity: 0;
-      transition: all 0.3s ease;
-    }
-    .toast.show {
-      transform: translateX(-50%) translateY(0);
-      opacity: 1;
-    }
-    .toast.success {
-      border-color: var(--success);
-    }
+    /* Empty State */
+    .empty-state { text-align: center; padding: 60px 20px; color: #6b7280; }
+    .empty-state svg { width: 64px; height: 64px; margin-bottom: 16px; opacity: 0.5; }
+    
+    /* Loading */
+    .loading { text-align: center; padding: 40px; color: #6b7280; }
+    .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    /* Toast */
+    .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(100px); background: rgba(0,0,0,0.9); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 16px 24px; color: #fff; font-size: 14px; z-index: 300; opacity: 0; transition: all 0.3s ease; }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
   </style>
 </head>
 <body>
@@ -882,716 +264,561 @@
     <div class="header">
       <div class="logo">EdgeBet AI</div>
       <div style="display: flex; gap: 8px; align-items: center;">
-        <div class="arb-badge" id="arbBadge" style="display: none;" onclick="showArbitrageModal()">
-          💰 <span id="arbCount">0</span> ARBS
+        <button onclick="toggleTheme()" style="background: none; border: none; font-size: 20px; cursor: pointer;">🌓</button>
+        <div class="live-badge"><div class="live-dot"></div><span>LIVE</span></div>
+      </div>
+    </div>
+
+    <!-- HOME / TOOLS PAGE -->
+    <div id="home-page" class="content active">
+      <div class="page-title">Betting Tools</div>
+      <div class="tools-grid">
+        <div class="tool-card" onclick="showPage('ev')">
+          <div class="tool-icon">🧮</div>
+          <div class="tool-name">EV Calculator</div>
+          <div class="tool-desc">Find expected value</div>
         </div>
-        <div class="live-badge">
-          <div class="live-dot"></div>
-          <span>LIVE</span>
+        <div class="tool-card" onclick="showPage('parlay')">
+          <div class="tool-icon">🔗</div>
+          <div class="tool-name">Parlay Builder</div>
+          <div class="tool-desc">Build +EV parlays</div>
+        </div>
+        <div class="tool-card" onclick="showPage('lines')">
+          <div class="tool-icon">📊</div>
+          <div class="tool-name">Line Shopping</div>
+          <div class="tool-desc">Compare all books</div>
+        </div>
+        <div class="tool-card" onclick="showPage('steam')">
+          <div class="tool-icon">⚡</div>
+          <div class="tool-name">Steam Moves</div>
+          <div class="tool-desc">Track sharp action</div>
+        </div>
+        <div class="tool-card" onclick="showPage('weather')">
+          <div class="tool-icon">🌤️</div>
+          <div class="tool-name">Weather</div>
+          <div class="tool-desc">NFL/MLB impacts</div>
+        </div>
+        <div class="tool-card" onclick="showPage('journal')">
+          <div class="tool-icon">📝</div>
+          <div class="tool-name">Journal</div>
+          <div class="tool-desc">Track your bets</div>
+        </div>
+        <div class="tool-card" onclick="showPage('picks')">
+          <div class="tool-icon">🎯</div>
+          <div class="tool-name">AI Picks</div>
+          <div class="tool-desc">7-agent system</div>
+        </div>
+        <div class="tool-card" onclick="showPage('arb')">
+          <div class="tool-icon">💰</div>
+          <div class="tool-name">Arbitrage</div>
+          <div class="tool-desc">Risk-free profits</div>
+        </div>
+      </div>
+      
+      <div class="section-title">Quick Stats</div>
+      <div class="card">
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; text-align: center;">
+          <div><div style="font-size: 28px; font-weight: 900; color: var(--accent);">+12.5%</div><div style="font-size: 11px; color: #6b7280;">ROI This Month</div></div>
+          <div><div style="font-size: 28px; font-weight: 900; color: var(--success);">142</div><div style="font-size: 11px; color: #6b7280;">Total Picks</div></div>
+          <div><div style="font-size: 28px; font-weight: 900; color: var(--warning);">8</div><div style="font-size: 11px; color: #6b7280;">Arbs Today</div></div>
         </div>
       </div>
     </div>
-    
-    <div class="ptr-indicator" id="ptrIndicator">
-      <span class="spinner"></span> Pull to refresh...
+
+    <!-- EV CALCULATOR PAGE -->
+    <div id="ev-page" class="content">
+      <div class="page-title">EV Calculator</div>
+      <div class="card">
+        <div class="input-group">
+          <label>True Win Probability (%)</label>
+          <input type="number" class="input" id="ev-true-prob" placeholder="55" min="1" max="99">
+        </div>
+        <div class="input-group">
+          <label>American Odds</label>
+          <input type="number" class="input" id="ev-odds" placeholder="-110 or +150">
+        </div>
+        <div class="input-group">
+          <label>Bankroll ($)</label>
+          <input type="number" class="input" id="ev-bankroll" placeholder="1000" value="1000">
+        </div>
+        <div class="input-group">
+          <label>Kelly Fraction (1/4 = 0.25)</label>
+          <input type="number" class="input" id="ev-kelly" placeholder="0.25" value="0.25" step="0.05" min="0.05" max="1">
+        </div>
+        <button class="btn" onclick="calculateEV()">Calculate EV</button>
+        <div id="ev-result"></div>
+      </div>
+    </div>
+
+    <!-- PARLAY BUILDER PAGE -->
+    <div id="parlay-page" class="content">
+      <div class="page-title">Parlay Builder</div>
+      <div id="parlay-legs">
+        <div class="parlay-leg">
+          <input type="text" class="input" placeholder="Leg 1 (e.g., Lakers -4.5)" id="leg-0-text">
+          <input type="number" class="input" placeholder="Odds" id="leg-0-odds" style="width: 100px;">
+          <input type="number" class="input" placeholder="Edge%" id="leg-0-edge" style="width: 80px;">
+        </div>
+      </div>
+      <button class="btn btn-secondary" onclick="addParlayLeg()">+ Add Leg</button>
+      <button class="btn" onclick="calculateParlay()">Calculate Parlay</button>
+      <div id="parlay-result"></div>
+    </div>
+
+    <!-- LINE SHOPPING PAGE -->
+    <div id="lines-page" class="content">
+      <div class="page-title">Line Shopping</div>
+      <div class="input-group">
+        <label>Select Game</label>
+        <select class="input" id="line-game">
+          <option>Lakers vs Warriors - Tonight</option>
+          <option>Chiefs vs Bills - Sunday</option>
+          <option>Rangers vs Devils - Tonight</option>
+        </select>
+      </div>
+      <button class="btn" onclick="loadLines()">Compare Lines</button>
+      <div id="lines-result"></div>
+    </div>
+
+    <!-- STEAM MOVES PAGE -->
+    <div id="steam-page" class="content">
+      <div class="page-title">Steam Moves</div>
+      <div class="card" style="background: linear-gradient(135deg, rgba(251,146,60,0.1), rgba(251,146,60,0.05)); border-color: rgba(251,146,60,0.3);">
+        <div style="font-size: 14px; color: #9ca3af; margin-bottom: 8px;">⚡ Live Tracking</div>
+        <div style="font-size: 13px;">Monitoring sharp book movements in real-time. Rapid line changes often indicate smart money or breaking news.</div>
+      </div>
+      <button class="btn" onclick="loadSteamMoves()">Refresh Steam Moves</button>
+      <div id="steam-container"></div>
+    </div>
+
+    <!-- WEATHER PAGE -->
+    <div id="weather-page" class="content">
+      <div class="page-title">Weather Impact</div>
+      <div class="input-group">
+        <label>Search Stadium/City</label>
+        <input type="text" class="input" id="weather-city" placeholder="e.g., Green Bay, Foxborough">
+      </div>
+      <button class="btn" onclick="loadWeather()">Check Weather</button>
+      <div id="weather-container"></div>
+    </div>
+
+    <!-- JOURNAL PAGE -->
+    <div id="journal-page" class="content">
+      <div class="page-title">Betting Journal</div>
+      <button class="btn" onclick="showJournalEntry()">+ New Entry</button>
+      <div id="journal-form" style="display: none;">
+        <div class="card">
+          <div class="input-group">
+            <label>Bet Description</label>
+            <input type="text" class="input" id="journal-bet" placeholder="Lakers -4.5">
+          </div>
+          <div class="input-group">
+            <label>Stake ($)</label>
+            <input type="number" class="input" id="journal-stake" placeholder="100">
+          </div>
+          <div class="input-group">
+            <label>Notes / Strategy</label>
+            <input type="text" class="input" id="journal-notes" placeholder="RLM detected, fading public">
+          </div>
+          <button class="btn btn-success" onclick="saveJournalEntry()">Save Entry</button>
+        </div>
+      </div>
+      <div class="section-title">Recent Entries</div>
+      <div id="journal-entries"></div>
     </div>
 
     <!-- PICKS PAGE -->
-    <div id="picks-page" class="content active">
-      <button class="scan-btn" onclick="scanPicks()" id="scanBtn">
-        ⚡ SCAN FOR PICKS
-      </button>
-      
-      <div class="filter-bar">
-        <select class="filter-select" id="sportFilter" onchange="applyFilters()">
-          <option value="all">All Sports</option>
-          <option value="NBA">🏀 NBA</option>
-          <option value="NFL">🏈 NFL</option>
-          <option value="NHL">🏒 NHL</option>
-          <option value="NCAAB">🎓 NCAAB</option>
-          <option value="MLB">⚾ MLB</option>
-        </select>
-        <div class="edge-slider">
-          <input type="range" id="edgeFilter" min="0" max="10" value="0" onchange="applyFilters()">
-          <span id="edgeValue">0%+ Edge</span>
-        </div>
-      </div>
-      
-      <div id="error-container"></div>
+    <div id="picks-page" class="content">
+      <div class="page-title">AI Picks</div>
+      <button class="btn" onclick="scanPicks()" id="scanBtn">⚡ SCAN FOR PICKS</button>
       <div id="picks-container"></div>
     </div>
 
-    <!-- PROPS PAGE -->
-    <div id="props-page" class="content">
-      <div class="page-title">Player Props</div>
-      <div class="filter-bar">
-        <select class="filter-select" id="propSportFilter" onchange="loadProps()">
-          <option value="basketball_nba">🏀 NBA</option>
-          <option value="americanfootball_nfl">🏈 NFL</option>
-          <option value="icehockey_nhl">🏒 NHL</option>
-          <option value="baseball_mlb">⚾ MLB</option>
-        </select>
-      </div>
-      <button class="scan-btn" onclick="loadProps()" id="propsBtn">
-        🔍 SCAN PROPS
-      </button>
-      <div id="props-container"></div>
-    </div>
-
-    <!-- ARBITRAGE PAGE -->
+    <!-- ARB PAGE -->
     <div id="arb-page" class="content">
-      <div class="page-title">Arbitrage Alerts</div>
-      <div style="background: linear-gradient(135deg, rgba(251,146,60,0.1), rgba(251,146,60,0.05)); border: 1px solid rgba(251,146,60,0.3); border-radius: 16px; padding: 20px; margin-bottom: 20px;">
-        <div style="font-size: 14px; color: var(--warning); margin-bottom: 8px;">💰 Guaranteed Profit</div>
-        <div style="font-size: 13px; color: #9ca3af;">Arbitrage = bet both sides at different books for risk-free profit. Requires accounts at multiple sportsbooks.</div>
-      </div>
-      <button class="scan-btn" onclick="loadArbitrage()" id="arbBtn" style="background: linear-gradient(135deg, var(--warning), #f59e0b);">
-        🔥 FIND ARBS
-      </button>
+      <div class="page-title">Arbitrage</div>
+      <button class="btn btn-warning" onclick="loadArbitrage()">🔥 FIND ARBS</button>
       <div id="arb-container"></div>
     </div>
 
-    <!-- TRACKER PAGE -->
-    <div id="tracker-page" class="content">
-      <div class="page-title">Bet Tracker</div>
-      <div class="tracker-stats">
-        <div class="stat-box">
-          <div class="stat-value" id="tracker-wins">0</div>
-          <div class="stat-label">Wins</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-value" id="tracker-losses">0</div>
-          <div class="stat-label">Losses</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-value" id="tracker-profit" style="color: var(--success);">+$0</div>
-          <div class="stat-label">Profit</div>
-        </div>
-      </div>
-      <div id="tracker-bets"></div>
-    </div>
-
-    <!-- CHAT PAGE -->
-    <div id="chat-page" class="content">
-      <div class="page-title">AI Chat</div>
-      <div class="chat-container" id="chat-container">
-        <div class="chat-message">
-          <div style="font-size: 12px; color: var(--accent); margin-bottom: 4px;">EdgeBet AI</div>
-          <div class="chat-bubble ai">Hey! I'm EdgeBet AI. Ask me about picks, betting strategy, arbitrage, or how the 7-agent system works!</div>
-        </div>
-      </div>
-      <div style="display: flex; gap: 8px;">
-        <input type="text" id="chat-input" placeholder="Ask me anything..." style="flex: 1; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; font-size: 14px;">
-        <button onclick="sendChat()" style="padding: 12px 20px; background: linear-gradient(135deg, #0891b2, #7c3aed); border: none; border-radius: 12px; color: #fff; font-weight: 700; cursor: pointer;">Send</button>
-      </div>
-      <div style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px;">
-        <button onclick="quickChat('How does the 7-agent system work?')" style="padding: 6px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 99px; color: #9ca3af; font-size: 12px; cursor: pointer;">How does it work?</button>
-        <button onclick="quickChat('What is arbitrage?')" style="padding: 6px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 99px; color: #9ca3af; font-size: 12px; cursor: pointer;">Arbitrage?</button>
-        <button onclick="quickChat('Bankroll tips')" style="padding: 6px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 99px; color: #9ca3af; font-size: 12px; cursor: pointer;">Bankroll tips</button>
-        <button onclick="quickChat('Sharp money vs public')" style="padding: 6px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 99px; color: #9ca3af; font-size: 12px; cursor: pointer;">Sharp vs Public</button>
-      </div>
-    </div>
-
-    <!-- MODALS -->
-    <div class="modal-overlay" id="pickModal" onclick="closeModal(event)">
-      <div class="modal" onclick="event.stopPropagation()">
-        <div class="modal-header">
-          <div class="modal-title">7-Agent Breakdown</div>
-          <button class="modal-close" onclick="closeModal()">&times;</button>
-        </div>
-        <div id="modal-content"></div>
-      </div>
-    </div>
-
-    <div class="modal-overlay" id="arbModal" onclick="closeArbModal(event)">
-      <div class="modal" onclick="event.stopPropagation()">
-        <div class="modal-header">
-          <div class="modal-title">💰 Arbitrage Opportunities</div>
-          <button class="modal-close" onclick="closeArbModal()">&times;</button>
-        </div>
-        <div id="arb-modal-content"></div>
-      </div>
-    </div>
-
-    <!-- TOAST -->
-    <div class="toast" id="toast"></div>
-
     <!-- NAVIGATION -->
     <div class="nav">
-      <button class="nav-item active" onclick="showPage('picks', this)">
+      <button class="nav-item active" onclick="showPage('home')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <span>Home</span>
+      </button>
+      <button class="nav-item" onclick="showPage('ev')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+        <span>EV</span>
+      </button>
+      <button class="nav-item" onclick="showPage('parlay')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+        <span>Parlay</span>
+      </button>
+      <button class="nav-item" onclick="showPage('picks')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         <span>Picks</span>
       </button>
-      <button class="nav-item" onclick="showPage('props', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-        <span>Props</span>
-      </button>
-      <button class="nav-item" onclick="showPage('arb', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        <span>Arbs</span>
-        <div class="nav-badge" id="navArbBadge" style="display: none;"></div>
-      </button>
-      <button class="nav-item" onclick="showPage('tracker', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-        <span>Tracker</span>
-      </button>
-      <button class="nav-item" onclick="showPage('chat', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-        <span>Chat</span>
+      <button class="nav-item" onclick="showPage('journal')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        <span>Journal</span>
       </button>
     </div>
   </div>
 
+  <div class="toast" id="toast"></div>
+
   <script>
     const BACKEND = "https://edgebet-backend-1.onrender.com";
-    let allPicks = [];
-    let currentPick = null;
-    let allArbs = [];
-    let touchStartY = 0;
-
+    let parlayLegCount = 1;
+    
     // Navigation
-    function showPage(pageName, btn) {
-      document.querySelectorAll('.content').forEach(page => page.classList.remove('active'));
+    function showPage(pageName) {
+      document.querySelectorAll('.content').forEach(p => p.classList.remove('active'));
       document.getElementById(pageName + '-page').classList.add('active');
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-      if (btn) btn.classList.add('active');
-      
-      if (pageName === 'tracker') loadTracker();
-      if (pageName === 'arb' && allArbs.length === 0) loadArbitrage();
+      event.currentTarget.classList.add('active');
     }
-
-    // Pull to refresh
-    document.addEventListener('touchstart', e => {
-      touchStartY = e.touches[0].clientY;
-    });
     
-    document.addEventListener('touchmove', e => {
-      const touchY = e.touches[0].clientY;
-      const scrollTop = document.querySelector('.content.active')?.scrollTop || 0;
-      
-      if (scrollTop === 0 && touchY > touchStartY + 50) {
-        document.getElementById('ptrIndicator').classList.add('visible');
-      }
-    });
+    // Theme Toggle
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+    }
     
-    document.addEventListener('touchend', e => {
-      const ptr = document.getElementById('ptrIndicator');
-      if (ptr.classList.contains('visible')) {
-        ptr.classList.remove('visible');
-        const activePage = document.querySelector('.content.active');
-        if (activePage.id === 'picks-page') scanPicks();
-        if (activePage.id === 'props-page') loadProps();
-        if (activePage.id === 'arb-page') loadArbitrage();
-      }
-    });
-
+    // Load saved theme
+    if (localStorage.getItem('theme') === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+    
     // Toast
-    function showToast(message, type = 'default') {
-      const toast = document.getElementById('toast');
-      toast.textContent = message;
-      toast.className = 'toast show' + (type === 'success' ? ' success' : '');
-      setTimeout(() => toast.classList.remove('show'), 3000);
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
     }
-
-    // Filters
-    function applyFilters() {
-      const sport = document.getElementById('sportFilter').value;
-      const minEdge = parseInt(document.getElementById('edgeFilter').value);
-      document.getElementById('edgeValue').textContent = minEdge + '%+ Edge';
+    
+    // EV Calculator
+    async function calculateEV() {
+      const trueProb = parseFloat(document.getElementById('ev-true-prob').value);
+      const odds = parseFloat(document.getElementById('ev-odds').value);
+      const bankroll = parseFloat(document.getElementById('ev-bankroll').value) || 1000;
+      const kelly = parseFloat(document.getElementById('ev-kelly').value) || 0.25;
       
-      const filtered = allPicks.filter(p => {
-        const sportMatch = sport === 'all' || p.sport === sport;
-        const edgeMatch = p.edge >= minEdge;
-        return sportMatch && edgeMatch;
-      });
+      if (!trueProb || !odds) {
+        showToast('Enter probability and odds');
+        return;
+      }
       
-      renderPicks(filtered);
+      try {
+        const res = await fetch(`${BACKEND}/ev-calculator`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ trueProbability: trueProb, odds, bankroll, kellyFraction: kelly })
+        });
+        const data = await res.json();
+        
+        const isPos = parseFloat(data.ev) > 0;
+        document.getElementById('ev-result').innerHTML = `
+          <div class="ev-result ${isPos ? 'ev-positive' : 'ev-negative'}">
+            <div class="ev-grade ${isPos ? 'a' : 'f'}">${data.rating}</div>
+            <div style="font-size: 14px; color: #9ca3af; margin-bottom: 16px;">${isPos ? 'Positive EV Bet' : 'Negative EV - Skip'}</div>
+            <div class="ev-stat"><span>Expected Value</span><span style="color: ${isPos ? 'var(--success)' : 'var(--danger)'}">${data.ev}%</span></div>
+            <div class="ev-stat"><span>Edge vs Market</span><span>${data.edge}%</span></div>
+            <div class="ev-stat"><span>Recommended Stake</span><span style="color: var(--accent);">$${data.recommendedStake}</span></div>
+            <div class="ev-stat"><span>Breakeven Win Rate</span><span>${data.breakevenProbability}%</span></div>
+          </div>
+        `;
+      } catch (e) {
+        showToast('Calculation failed');
+      }
     }
-
-    // Skeleton loading
-    function showSkeleton(count = 3) {
-      const container = document.getElementById('picks-container');
-      container.innerHTML = Array(count).fill(0).map(() => `
-        <div class="skeleton-card">
-          <div class="skeleton skeleton-line short"></div>
-          <div class="skeleton skeleton-line"></div>
-          <div class="skeleton skeleton-line tiny"></div>
+    
+    // Parlay Builder
+    function addParlayLeg() {
+      const container = document.getElementById('parlay-legs');
+      const div = document.createElement('div');
+      div.className = 'parlay-leg';
+      div.innerHTML = `
+        <input type="text" class="input" placeholder="Leg ${parlayLegCount + 1}" id="leg-${parlayLegCount}-text">
+        <input type="number" class="input" placeholder="Odds" id="leg-${parlayLegCount}-odds" style="width: 100px;">
+        <input type="number" class="input" placeholder="Edge%" id="leg-${parlayLegCount}-edge" style="width: 80px;">
+        <button class="parlay-remove" onclick="this.parentElement.remove()">×</button>
+      `;
+      container.appendChild(div);
+      parlayLegCount++;
+    }
+    
+    async function calculateParlay() {
+      const legs = [];
+      for (let i = 0; i < parlayLegCount; i++) {
+        const odds = document.getElementById(`leg-${i}-odds`)?.value;
+        const edge = document.getElementById(`leg-${i}-edge`)?.value;
+        if (odds) {
+          legs.push({ odds: parseFloat(odds), edge: parseFloat(edge) || 0, trueProb: 50 });
+        }
+      }
+      
+      if (legs.length < 2) {
+        showToast('Add at least 2 legs');
+        return;
+      }
+      
+      try {
+        const res = await fetch(`${BACKEND}/parlay-calculator`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ legs })
+        });
+        const data = await res.json();
+        
+        const isPos = data.isPositive;
+        document.getElementById('parlay-result').innerHTML = `
+          <div class="card ${isPos ? 'ev-positive' : 'ev-negative'}" style="margin-top: 20px;">
+            <div style="font-size: 32px; font-weight: 900; color: ${isPos ? 'var(--success)' : 'var(--danger)'};">${data.americanOdds}</div>
+            <div style="font-size: 14px; color: #9ca3af; margin-bottom: 16px;">${data.legs} Leg Parlay</div>
+            <div class="ev-stat"><span>Expected Value</span><span style="color: ${isPos ? 'var(--success)' : 'var(--danger)'}">${data.ev}%</span></div>
+            <div class="ev-stat"><span>True Probability</span><span>${data.trueProbability}%</span></div>
+            <div class="ev-stat"><span>Recommendation</span><span style="color: ${isPos ? 'var(--success)' : 'var(--warning)'}">${data.stake}</span></div>
+          </div>
+        `;
+      } catch (e) {
+        showToast('Calculation failed');
+      }
+    }
+    
+    // Line Shopping
+    async function loadLines() {
+      const container = document.getElementById('lines-result');
+      container.innerHTML = '<div class="loading"><div class="spinner"></div>Loading lines...</div>';
+      
+      // Simulated data - in production this would come from backend
+      setTimeout(() => {
+        container.innerHTML = `
+          <div class="card">
+            <div style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">Lakers -4.5</div>
+            <div class="book-compare">
+              <div class="book-cell best"><div class="book-name">FanDuel</div><div class="book-odds" style="color: var(--success)">-105</div></div>
+              <div class="book-cell"><div class="book-name">DraftKings</div><div class="book-odds">-110</div></div>
+              <div class="book-cell"><div class="book-name">BetMGM</div><div class="book-odds">-115</div></div>
+            </div>
+            <div style="margin-top: 12px; padding: 12px; background: rgba(74,222,128,0.1); border-radius: 8px; font-size: 13px;">
+              <strong>Best Value:</strong> FanDuel at -105 saves you $4.76 per $100 bet vs worst line
+            </div>
+          </div>
+        `;
+      }, 1000);
+    }
+    
+    // Steam Moves
+    async function loadSteamMoves() {
+      const container = document.getElementById('steam-container');
+      container.innerHTML = '<div class="loading"><div class="spinner"></div>Scanning for steam...</div>';
+      
+      try {
+        const res = await fetch(`${BACKEND}/steam-moves/basketball_nba`);
+        const data = await res.json();
+        
+        if (!data.moves || data.moves.length === 0) {
+          container.innerHTML = '<div class="empty-state">No significant line movements detected</div>';
+          return;
+        }
+        
+        container.innerHTML = data.moves.slice(0, 5).map(m => `
+          <div class="steam-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <div style="font-weight: 700;">${m.game}</div>
+              ${m.steam ? '<span style="background: var(--warning); color: #000; padding: 2px 8px; border-radius: 99px; font-size: 10px; font-weight: 700;">STEAM</span>' : ''}
+            </div>
+            <div style="font-size: 13px; color: #9ca3af;">${m.book} • ${m.market}</div>
+            <div style="margin-top: 8px; font-family: monospace;">
+              ${m.oldLine} → <span style="color: ${m.pointChange > 0 ? 'var(--success)' : 'var(--danger)'}; font-weight: 700;">${m.newLine}</span>
+              <span style="font-size: 12px; margin-left: 8px;">(${m.pointChange > 0 ? '+' : ''}${m.pointChange})</span>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        container.innerHTML = '<div class="empty-state">Steam move tracking unavailable</div>';
+      }
+    }
+    
+    // Weather
+    async function loadWeather() {
+      const city = document.getElementById('weather-city').value;
+      if (!city) { showToast('Enter a city'); return; }
+      
+      const container = document.getElementById('weather-container');
+      container.innerHTML = '<div class="loading"><div class="spinner"></div>Loading forecast...</div>';
+      
+      try {
+        const res = await fetch(`${BACKEND}/weather/${encodeURIComponent(city)}`);
+        const data = await res.json();
+        
+        const impactClass = data.impact === 'high' ? 'high' : data.impact === 'medium' ? 'medium' : '';
+        const impactText = data.impact === 'high' ? '⚠️ HIGH IMPACT - Consider Under' : data.impact === 'medium' ? 'Medium Impact' : 'Low Impact';
+        
+        container.innerHTML = `
+          <div class="weather-card">
+            <div class="weather-icon">${data.rain ? '🌧️' : data.wind > 15 ? '💨' : '☀️'}</div>
+            <div>
+              <div class="weather-temp">${data.temp}°F</div>
+              <div class="weather-detail">Wind: ${data.wind} mph ${data.rain ? '• Rain expected' : ''}</div>
+              <div class="weather-impact ${impactClass}">${impactText}</div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">Betting Implications</div>
+            <div style="font-size: 13px; color: #9ca3af; line-height: 1.6;">
+              ${data.wind > 15 ? '• High winds favor unders in NFL/MLB<br>' : ''}
+              ${data.rain ? '• Rain affects passing game & field conditions<br>' : ''}
+              ${data.temp < 32 ? '• Cold weather = lower scoring typically<br>' : ''}
+              ${data.impact === 'none' ? '• Weather is neutral factor' : ''}
+            </div>
+          </div>
+        `;
+      } catch (e) {
+        container.innerHTML = '<div class="empty-state">Weather data unavailable</div>';
+      }
+    }
+    
+    // Journal
+    function showJournalEntry() {
+      document.getElementById('journal-form').style.display = 'block';
+    }
+    
+    function saveJournalEntry() {
+      const bet = document.getElementById('journal-bet').value;
+      const stake = document.getElementById('journal-stake').value;
+      const notes = document.getElementById('journal-notes').value;
+      
+      if (!bet) { showToast('Enter bet description'); return; }
+      
+      const entries = JSON.parse(localStorage.getItem('edgebet_journal') || '[]');
+      entries.unshift({ bet, stake, notes, date: new Date().toLocaleDateString(), id: Date.now() });
+      localStorage.setItem('edgebet_journal', JSON.stringify(entries));
+      
+      document.getElementById('journal-form').style.display = 'none';
+      document.getElementById('journal-bet').value = '';
+      document.getElementById('journal-stake').value = '';
+      document.getElementById('journal-notes').value = '';
+      
+      loadJournalEntries();
+      showToast('Entry saved!');
+    }
+    
+    function loadJournalEntries() {
+      const entries = JSON.parse(localStorage.getItem('edgebet_journal') || '[]');
+      const container = document.getElementById('journal-entries');
+      
+      if (entries.length === 0) {
+        container.innerHTML = '<div class="empty-state">No entries yet</div>';
+        return;
+      }
+      
+      container.innerHTML = entries.map(e => `
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="font-weight: 700;">${e.bet}</span>
+            <span style="color: #6b7280; font-size: 12px;">${e.date}</span>
+          </div>
+          ${e.stake ? `<div style="font-size: 13px; color: var(--accent); margin-bottom: 4px;">$${e.stake}</div>` : ''}
+          ${e.notes ? `<div style="font-size: 13px; color: #9ca3af;">${e.notes}</div>` : ''}
         </div>
       `).join('');
     }
-
-    // Scan for picks
+    
+    // Picks
     async function scanPicks() {
       const btn = document.getElementById('scanBtn');
       const container = document.getElementById('picks-container');
-      const errorContainer = document.getElementById('error-container');
       
       btn.disabled = true;
       btn.textContent = 'Scanning...';
-      errorContainer.innerHTML = '';
-      showSkeleton();
+      container.innerHTML = '<div class="loading"><div class="spinner"></div>7 agents analyzing...</div>';
       
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        const res = await fetch(`${BACKEND}/scan`);
+        const data = await res.json();
         
-        const response = await fetch(BACKEND + '/scan', { signal: controller.signal });
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        
-        const data = await response.json();
-        if (data.error) throw new Error(data.error);
-        
-        allPicks = data.consensus_picks || [];
-        allArbs = data.arbitrage_opportunities || [];
-        
-        // Update arb badges
-        if (allArbs.length > 0) {
-          document.getElementById('arbBadge').style.display = 'flex';
-          document.getElementById('arbCount').textContent = allArbs.length;
-          document.getElementById('navArbBadge').style.display = 'block';
+        if (!data.consensus_picks || data.consensus_picks.length === 0) {
+          container.innerHTML = '<div class="empty-state">No picks available right now</div>';
+          return;
         }
         
-        applyFilters();
-        showToast(`Found ${allPicks.length} picks & ${allArbs.length} arbs!`, 'success');
-        
-      } catch (err) {
-        errorContainer.innerHTML = `
-          <div class="error">
-            ${err.name === 'AbortError' ? 'Request timed out. Try again.' : err.message}
-            <br><button onclick="scanPicks()">Retry</button>
+        container.innerHTML = data.consensus_picks.map(p => `
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="color: #9ca3af; font-size: 13px;">${p.sport}</span>
+              <span style="background: var(--accent); color: #000; padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 700;">+${p.edge}% EDGE</span>
+            </div>
+            <div style="font-size: 20px; font-weight: 900; margin-bottom: 4px;">${p.bet}</div>
+            <div style="font-size: 14px; color: #6b7280; margin-bottom: 8px;">${p.game}</div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-family: monospace; font-size: 18px; color: var(--success); font-weight: 700;">${p.odds}</span>
+              <span style="font-size: 13px; color: #9ca3af;">${p.confidence}% confidence</span>
+            </div>
           </div>
-        `;
-        container.innerHTML = '';
+        `).join('');
+      } catch (e) {
+        container.innerHTML = '<div class="empty-state">Scan failed. Try again.</div>';
       } finally {
         btn.disabled = false;
         btn.textContent = '⚡ SCAN AGAIN';
       }
     }
-
-    // Render picks
-    function renderPicks(picks) {
-      const container = document.getElementById('picks-container');
-      
-      if (!picks || picks.length === 0) {
-        container.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><div>No picks match your filters.</div><div style="font-size: 14px; margin-top: 8px;">Try adjusting your criteria</div></div>';
-        return;
-      }
-      
-      container.innerHTML = picks.map((pick, i) => {
-        const agentGrades = getAgentGrades(pick);
-        const hasArb = allArbs.some(a => a.game === pick.game);
-        const sparkline = renderSparkline(pick.lineSparkline);
-        
-        return `
-          <div class="pick-card ${hasArb ? 'arb-highlight' : ''}" style="animation-delay: ${i * 0.05}s">
-            ${hasArb ? '<div class="arb-flash" style="position: absolute; top: -8px; right: 20px;">ARB!</div>' : ''}
-            <button class="share-btn" onclick="sharePick(event, '${pick.id}')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
-            </button>
-            <div onclick="showPickDetail('${pick.id}')">
-              <div class="pick-header">
-                <div class="sport-tag">
-                  <span>${pick.emoji || '🎯'}</span>
-                  <span>${pick.sport}</span>
-                </div>
-                <div class="edge-badge">+${pick.edge}% EDGE</div>
-              </div>
-              <div class="game-title">${pick.game}</div>
-              <div class="pick-bet">${pick.bet}</div>
-              <div class="pick-odds">${pick.odds}</div>
-              
-              ${sparkline ? `
-                <div class="sparkline-container">
-                  <svg class="sparkline" viewBox="0 0 100 30" preserveAspectRatio="none">
-                    ${sparkline}
-                  </svg>
-                  <span class="sparkline-label">Line movement</span>
-                </div>
-              ` : ''}
-              
-              <div class="odds-comparison">
-                <span class="best">Best:</span> ${pick.model_breakdown?.best_book || 'Multiple'} | 
-                <span>Line:</span> ${pick.currentLine || 'N/A'}
-              </div>
-              
-              <div class="confidence-bar">
-                <div class="conf-header">
-                  <span>AI Confidence</span>
-                  <span>${pick.confidence}%</span>
-                </div>
-                <div class="conf-bar">
-                  <div class="conf-fill" style="width: ${pick.confidence}%"></div>
-                </div>
-              </div>
-              
-              <div class="agent-scores">
-                ${agentGrades.map(g => `<span class="agent-pill agent-${g.grade.toLowerCase().replace('+', '')}">${g.name}: ${g.grade}</span>`).join('')}
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    // Render sparkline SVG
-    function renderSparkline(data) {
-      if (!data || data.length < 2) return null;
-      
-      const min = Math.min(...data);
-      const max = Math.max(...data);
-      const range = max - min || 1;
-      
-      const points = data.map((val, i) => {
-        const x = (i / (data.length - 1)) * 100;
-        const y = 30 - ((val - min) / range) * 25 - 2.5;
-        return `${x},${y}`;
-      }).join(' ');
-      
-      const color = data[data.length - 1] > data[0] ? '#4ade80' : '#ef4444';
-      
-      return `<polyline fill="none" stroke="${color}" stroke-width="2" points="${points}" stroke-linecap="round" stroke-linejoin="round"/>`;
-    }
-
-    // Get agent grades
-    function getAgentGrades(pick) {
-      const mb = pick.model_breakdown || {};
-      const grades = [];
-      
-      if (mb.value) grades.push({ name: 'Value', grade: mb.value.split(' ')[0] });
-      if (mb.line_movement) grades.push({ name: 'Line', grade: extractGrade(mb.line_movement) });
-      if (mb.public_money) grades.push({ name: 'Public', grade: 'B+' });
-      if (mb.sharp_action) grades.push({ name: 'Sharp', grade: 'A-' });
-      
-      return grades.slice(0, 4);
-    }
-
-    function extractGrade(text) {
-      if (text.includes('strong') || text.includes('Strong')) return 'A';
-      if (text.includes('moderate') || text.includes('Moderate')) return 'B+';
-      return 'B';
-    }
-
-    // Share pick
-    async function sharePick(event, pickId) {
-      event.stopPropagation();
-      const pick = allPicks.find(p => p.id === pickId);
-      if (!pick) return;
-      
-      const text = `EdgeBet AI Pick: ${pick.bet} (${pick.odds}) - ${pick.confidence}% confidence, +${pick.edge}% edge`;
-      
-      if (navigator.share) {
-        navigator.share({ title: 'EdgeBet AI Pick', text });
-      } else {
-        navigator.clipboard.writeText(text);
-        showToast('Copied to clipboard!', 'success');
-      }
-    }
-
-    // Pick detail modal
-    function showPickDetail(pickId) {
-      currentPick = allPicks.find(p => p.id === pickId);
-      if (!currentPick) return;
-      
-      const mb = currentPick.model_breakdown || {};
-      const isTracked = isPickTracked(pickId);
-      
-      document.getElementById('modal-content').innerHTML = `
-        <div style="text-align: center; margin-bottom: 20px;">
-          <div style="font-size: 14px; color: #9ca3af; margin-bottom: 4px;">${currentPick.sport} ${currentPick.emoji}</div>
-          <div style="font-size: 20px; font-weight: 800; color: #fff;">${currentPick.game}</div>
-          <div style="font-size: 28px; font-weight: 900; color: var(--accent); margin: 12px 0;">${currentPick.bet}</div>
-          <div style="font-size: 18px; color: var(--success); font-family: monospace;">${currentPick.odds}</div>
-        </div>
-        
-        <div class="agent-breakdown">
-          <div class="agent-row"><div class="agent-icon" style="background: rgba(34,211,238,0.15);">💰</div><div class="agent-info"><div class="agent-name">Value Agent</div><div class="agent-desc">${mb.value || 'Analyzing...'}</div></div><div class="agent-grade agent-a">${mb.value ? mb.value.split(' ')[0] : 'B+'}</div></div>
-          <div class="agent-row"><div class="agent-icon" style="background: rgba(167,139,250,0.15);">📊</div><div class="agent-info"><div class="agent-name">Line Movement</div><div class="agent-desc">${mb.line_movement || 'Monitoring...'}</div></div><div class="agent-grade agent-b">B+</div></div>
-          <div class="agent-row"><div class="agent-icon" style="background: rgba(251,146,60,0.15);">👥</div><div class="agent-info"><div class="agent-name">Public Money</div><div class="agent-desc">${mb.public_money || 'Analyzing...'}</div></div><div class="agent-grade agent-b">B</div></div>
-          <div class="agent-row"><div class="agent-icon" style="background: rgba(74,222,128,0.15);">🎯</div><div class="agent-info"><div class="agent-name">Sharp Money</div><div class="agent-desc">${mb.sharp_action || 'Tracking...'}</div></div><div class="agent-grade agent-a">A-</div></div>
-          <div class="agent-row"><div class="agent-icon" style="background: rgba(239,68,68,0.15);">⚕️</div><div class="agent-info"><div class="agent-name">Injury Scout</div><div class="agent-desc">${mb.injury_report || 'Monitoring...'}</div></div><div class="agent-grade agent-b">B+</div></div>
-          <div class="agent-row"><div class="agent-icon" style="background: rgba(156,163,175,0.15);">📅</div><div class="agent-info"><div class="agent-name">Situational</div><div class="agent-desc">${mb.situational || 'Analyzing...'}</div></div><div class="agent-grade agent-b">B</div></div>
-        </div>
-        
-        <div class="consensus-box">
-          <div style="font-size: 12px; color: #9ca3af; margin-bottom: 8px;">7-Agent Consensus</div>
-          <div class="consensus-score">${currentPick.confidence}%</div>
-          <div style="font-size: 14px; color: #fff; margin-top: 8px;">${currentPick.edge}% Edge • ${currentPick.betType}</div>
-        </div>
-        
-        <button class="track-btn ${isTracked ? 'tracked' : ''}" onclick="toggleTrackPick()">
-          ${isTracked ? '✓ Tracked' : 'Track This Pick'}
-        </button>
-      `;
-      
-      document.getElementById('pickModal').classList.add('active');
-    }
-
-    function closeModal(e) {
-      if (!e || e.target.id === 'pickModal') {
-        document.getElementById('pickModal').classList.remove('active');
-      }
-    }
-
+    
     // Arbitrage
     async function loadArbitrage() {
-      const btn = document.getElementById('arbBtn');
       const container = document.getElementById('arb-container');
-      
-      btn.disabled = true;
-      btn.textContent = 'Scanning...';
-      container.innerHTML = '<div class="loading"><div class="spinner"></div><div>Finding arbitrage opportunities...</div></div>';
+      container.innerHTML = '<div class="loading"><div class="spinner"></div>Finding arbitrage opportunities...</div>';
       
       try {
-        const response = await fetch(BACKEND + '/arbitrage');
-        const data = await response.json();
-        allArbs = data.opportunities || [];
-        renderArbitrage(allArbs);
-      } catch (err) {
-        container.innerHTML = '<div class="error">Failed to load arbitrage data. Try again.</div>';
-      } finally {
-        btn.disabled = false;
-        btn.textContent = '🔥 FIND ARBS';
-      }
-    }
-
-    function renderArbitrage(arbs) {
-      const container = document.getElementById('arb-container');
-      
-      if (!arbs || arbs.length === 0) {
-        container.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><div>No arbitrage opportunities right now</div><div style="font-size: 14px; margin-top: 8px;">Arbs appear when books have different lines</div></div>';
-        return;
-      }
-      
-      container.innerHTML = arbs.map((arb, i) => `
-        <div class="arb-card animate-in" style="animation-delay: ${i * 0.1}s">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <div style="font-size: 14px; color: #9ca3af;">${arb.sport} • ${arb.game}</div>
-            <div class="arb-profit">+${arb.profit}%</div>
-          </div>
-          <div style="font-size: 12px; color: #6b7280; margin-bottom: 12px;">Risk-free profit by betting both sides</div>
-          <div class="arb-books">
-            <div class="arb-book">
-              <div class="arb-book-name">${arb.awayBook}</div>
-              <div class="arb-book-odds">${arb.awayOdds}</div>
-              <div style="font-size: 10px; color: #6b7280;">Bet $${arb.stake?.away || '100'}</div>
+        const res = await fetch(`${BACKEND}/arbitrage`);
+        const data = await res.json();
+        
+        if (!data.opportunities || data.opportunities.length === 0) {
+          container.innerHTML = '<div class="empty-state">No arbs available right now. Lines are tight.</div>';
+          return;
+        }
+        
+        container.innerHTML = data.opportunities.slice(0, 5).map(a => `
+          <div class="card" style="border-color: var(--warning); background: linear-gradient(135deg, rgba(251,146,60,0.05), rgba(251,146,60,0.02));">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div style="font-size: 14px; color: #9ca3af;">${a.sport}</div>
+              <div style="font-size: 28px; font-weight: 900; color: var(--warning);">+${a.profit}%</div>
             </div>
-            <div style="color: #6b7280;">+</div>
-            <div class="arb-book">
-              <div class="arb-book-name">${arb.homeBook}</div>
-              <div class="arb-book-odds">${arb.homeOdds}</div>
-              <div style="font-size: 10px; color: #6b7280;">Bet $${arb.stake?.home || '100'}</div>
+            <div style="font-size: 16px; font-weight: 700; margin-bottom: 8px;">${a.game}</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(251,146,60,0.2);">
+              <div>
+                <div style="font-size: 11px; color: #6b7280; text-transform: uppercase;">${a.awayBook}</div>
+                <div style="font-size: 16px; font-weight: 700; font-family: monospace;">${a.awayOdds}</div>
+                <div style="font-size: 11px; color: #9ca3af;">Bet $${a.stake?.away || '100'}</div>
+              </div>
+              <div>
+                <div style="font-size: 11px; color: #6b7280; text-transform: uppercase;">${a.homeBook}</div>
+                <div style="font-size: 16px; font-weight: 700; font-family: monospace;">${a.homeOdds}</div>
+                <div style="font-size: 11px; color: #9ca3af;">Bet $${a.stake?.home || '100'}</div>
+              </div>
             </div>
           </div>
-        </div>
-      `).join('');
-    }
-
-    function showArbitrageModal() {
-      renderArbitrageModal(allArbs);
-      document.getElementById('arbModal').classList.add('active');
-    }
-
-    function renderArbitrageModal(arbs) {
-      const container = document.getElementById('arb-modal-content');
-      if (!arbs || arbs.length === 0) {
-        container.innerHTML = '<div class="empty-state">No arbitrage opportunities found</div>';
-        return;
-      }
-      renderArbitrage(arbs);
-    }
-
-    function closeArbModal(e) {
-      if (!e || e.target.id === 'arbModal') {
-        document.getElementById('arbModal').classList.remove('active');
+        `).join('');
+      } catch (e) {
+        container.innerHTML = '<div class="empty-state">Could not load arbitrage data</div>';
       }
     }
-
-    // Player Props
-    async function loadProps() {
-      const btn = document.getElementById('propsBtn');
-      const container = document.getElementById('props-container');
-      const sport = document.getElementById('propSportFilter').value;
-      
-      btn.disabled = true;
-      btn.textContent = 'Scanning...';
-      container.innerHTML = '<div class="loading"><div class="spinner"></div><div>Scanning player props...</div></div>';
-      
-      try {
-        const response = await fetch(`${BACKEND}/props?sport=${sport}`);
-        const data = await response.json();
-        renderProps(data.props || []);
-      } catch (err) {
-        container.innerHTML = '<div class="error">Failed to load props. Try again.</div>';
-      } finally {
-        btn.disabled = false;
-        btn.textContent = '🔍 SCAN PROPS';
-      }
-    }
-
-    function renderProps(props) {
-      const container = document.getElementById('props-container');
-      
-      if (!props || props.length === 0) {
-        container.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg><div>No props found</div></div>';
-        return;
-      }
-      
-      container.innerHTML = props.map((prop, i) => `
-        <div class="prop-card animate-in" style="animation-delay: ${i * 0.05}s">
-          <div class="pick-header">
-            <div class="sport-tag"><span>${prop.emoji}</span><span>${prop.sport}</span></div>
-            <div class="edge-badge">+${prop.edge}% EDGE</div>
-          </div>
-          <div class="prop-player">${prop.player}</div>
-          <div class="prop-market">${prop.market.replace(/_/g, ' ').toUpperCase()}</div>
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div class="prop-line">${prop.side} ${prop.line}</div>
-            <div style="font-size: 14px; color: var(--success); font-family: monospace;">${prop.bestPrice > 0 ? '+' : ''}${prop.bestPrice}</div>
-          </div>
-          <div class="confidence-bar" style="margin-top: 12px;">
-            <div class="conf-header"><span>Confidence</span><span>${prop.confidence}%</span></div>
-            <div class="conf-bar"><div class="conf-fill" style="width: ${prop.confidence}%"></div></div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    // Bet Tracker
-    function getTrackedBets() {
-      return JSON.parse(localStorage.getItem('edgebet_tracked') || '[]');
-    }
-
-    function isPickTracked(pickId) {
-      return getTrackedBets().some(b => b.id === pickId);
-    }
-
-    function toggleTrackPick() {
-      if (!currentPick) return;
-      
-      const bets = getTrackedBets();
-      const idx = bets.findIndex(b => b.id === currentPick.id);
-      
-      if (idx >= 0) {
-        bets.splice(idx, 1);
-        showToast('Pick removed from tracker');
-      } else {
-        bets.push({ ...currentPick, trackedAt: new Date().toISOString(), result: null });
-        showToast('Pick tracked!', 'success');
-      }
-      
-      localStorage.setItem('edgebet_tracked', JSON.stringify(bets));
-      showPickDetail(currentPick.id);
-    }
-
-    function loadTracker() {
-      const bets = getTrackedBets();
-      const container = document.getElementById('tracker-bets');
-      
-      const wins = bets.filter(b => b.result === 'win').length;
-      const losses = bets.filter(b => b.result === 'loss').length;
-      const pushes = bets.filter(b => b.result === 'push').length;
-      
-      document.getElementById('tracker-wins').textContent = wins;
-      document.getElementById('tracker-losses').textContent = losses;
-      
-      const profit = (wins * 100) - ((wins + losses + pushes) * 110);
-      const profitEl = document.getElementById('tracker-profit');
-      profitEl.textContent = (profit >= 0 ? '+' : '') + '$' + profit;
-      profitEl.style.color = profit >= 0 ? 'var(--success)' : 'var(--danger)';
-      
-      if (bets.length === 0) {
-        container.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><div>No tracked bets yet</div><div style="font-size: 14px; margin-top: 8px;">Tap any pick to track it</div></div>';
-        return;
-      }
-      
-      container.innerHTML = bets.map(bet => `
-        <div class="bet-item">
-          <div class="bet-header">
-            <div>
-              <div class="bet-game">${bet.sport} ${bet.emoji} • ${new Date(bet.trackedAt).toLocaleDateString()}</div>
-              <div class="bet-pick">${bet.bet}</div>
-            </div>
-            <div style="text-align: right;">
-              <div style="font-size: 14px; color: var(--success); font-family: monospace;">${bet.odds}</div>
-              <div style="font-size: 11px; color: #6b7280;">${bet.edge}% edge</div>
-            </div>
-          </div>
-          <div class="bet-footer">
-            <div style="font-size: 12px; color: #6b7280;">${bet.game}</div>
-            <div class="bet-result-btns">
-              <button class="result-btn win-btn ${bet.result === 'win' ? 'selected' : ''}" onclick="setResult('${bet.id}', 'win')">W</button>
-              <button class="result-btn loss-btn ${bet.result === 'loss' ? 'selected' : ''}" onclick="setResult('${bet.id}', 'loss')">L</button>
-              <button class="result-btn push-btn ${bet.result === 'push' ? 'selected' : ''}" onclick="setResult('${bet.id}', 'push')">P</button>
-            </div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function setResult(pickId, result) {
-      const bets = getTrackedBets();
-      const bet = bets.find(b => b.id === pickId);
-      if (bet) {
-        bet.result = result;
-        localStorage.setItem('edgebet_tracked', JSON.stringify(bets));
-        loadTracker();
-      }
-    }
-
-    // Chat
-    function sendChat() {
-      const input = document.getElementById('chat-input');
-      const message = input.value.trim();
-      if (!message) return;
-      
-      addChatMessage(message, true);
-      input.value = '';
-      
-      fetch(BACKEND + '/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message })
-      })
-      .then(r => r.json())
-      .then(data => addChatMessage(data.reply))
-      .catch(() => addChatMessage(getLocalResponse(message)));
-    }
-
-    function addChatMessage(text, isUser = false) {
-      const container = document.getElementById('chat-container');
-      const div = document.createElement('div');
-      div.className = 'chat-message' + (isUser ? ' user' : '');
-      div.innerHTML = `
-        <div style="font-size: 12px; color: ${isUser ? 'var(--accent2)' : 'var(--accent)'}; margin-bottom: 4px;">${isUser ? 'You' : 'EdgeBet AI'}</div>
-        <div class="chat-bubble ${isUser ? 'user' : 'ai'}">${text}</div>
-      `;
-      container.appendChild(div);
-      container.scrollTop = container.scrollHeight;
-    }
-
-    function quickChat(message) {
-      document.getElementById('chat-input').value = message;
-      sendChat();
-    }
-
-    function getLocalResponse(message) {
-      const lower = message.toLowerCase();
-      if (lower.includes('arb')) return 'Arbitrage = bet both sides at different books for guaranteed profit. Check the Arbs tab!';
-      if (lower.includes('prop')) return 'Player props are softer markets. We scan them with the same 7-agent system. Check the Props tab!';
-      return 'Hit Scan to find picks with positive expected value. The 7-agent system analyzes thousands of data points.';
-    }
-
-    // Keyboard shortcuts
+    
+    // Init
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('chat-input')?.addEventListener('keypress', e => {
-        if (e.key === 'Enter') sendChat();
-      });
-      
-      // Auto-scan on load
-      scanPicks();
+      loadJournalEntries();
     });
+    
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(console.error);
+    }
   </script>
 </body>
 </html>
