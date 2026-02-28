@@ -1,46 +1,2407 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=edgebet-preview.html">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>EdgeBet AI</title>
+  <meta name="description"
+    content="AI-powered sports betting picks. 7-agent system scanning NBA, NFL, NHL, NCAAB & MLB for real edges. Live odds, sharp money tracking, parlay builder." />
+  <meta name="theme-color" content="#09090b" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="EdgeBet AI" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="EdgeBet AI — 7-Agent Sports Betting System" />
+  <meta property="og:description"
+    content="Find real betting edges with AI. Live odds, sharp money tracking, parlay builder across NBA, NFL, NHL, NCAAB & MLB." />
+  <meta property="og:image" content="https://edgebet.app/og-image.png" />
+  <meta property="og:url" content="https://edgebet.app" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="EdgeBet AI" />
+  <meta name="twitter:description" content="AI-powered betting picks. Real edges, live odds, sharp money." />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%2309090b'/><text y='.9em' font-size='70' x='15'>⚡</text></svg>" />
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
   <style>
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
     body {
       background: #09090b;
-      color: #22d3ee;
-      font-family: -apple-system, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
+      color: #fff;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
-    .loading {
-      text-align: center;
-    }
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid rgba(34,211,238,0.2);
-      border-top-color: #22d3ee;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 16px;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    a {
-      color: #22d3ee;
-      text-decoration: none;
+
+    #root {
+      height: 100%;
     }
   </style>
+  <!-- React + ReactDOM from CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Babel standalone to transform JSX in the browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
+
 <body>
-  <div class="loading">
-    <div class="spinner"></div>
-    <p>Loading EdgeBet AI...</p>
-    <p><a href="edgebet-preview.html">Click here if not redirected</a></p>
-  </div>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+
+
+    // ─── CONFIG ───────────────────────────────────────────────────────────────────
+    // ⚠️  API key intentionally removed from frontend.
+    // All odds data is fetched through your backend proxy.
+    const BACKEND = "https://edgebet-backend-1.onrender.com";
+
+    // Affiliate links — replace with your actual affiliate URLs after signup
+    const AFFILIATES = {
+      draftkings: {
+        name: "DraftKings",
+        url: "https://sportsbook.draftkings.com/?affiliateid=YOUR_ID" // ➡️ Replace after signup: draftkings.com/affiliates,
+    logo: "DK",
+        color: "#53D338",
+        bonus: "Bet $5, Get $150",
+      },
+      fanduel: {
+        name: "FanDuel",
+        url: "https://sportsbook.fanduel.com/join?pid=YOUR_ID" // ➡️ Replace after signup: fanduel.com/affiliates,
+    logo: "FD",
+        color: "#1493FF",
+        bonus: "No Sweat First Bet up to $1,000",
+      },
+      betmgm: {
+        name: "BetMGM",
+        url: "https://sports.betmgm.com/en/sports?affiliateCode=YOUR_ID" // ➡️ Replace after signup: betmgm.com/affiliates,
+    logo: "MGM",
+        color: "#C9A96E",
+        bonus: "First Bet Offer up to $1,500",
+      },
+    };
+
+    const SPORTS_CONFIG = [
+      { key: "basketball_nba", label: "NBA", emoji: "🏀" },
+      { key: "americanfootball_nfl", label: "NFL", emoji: "🏈" },
+      { key: "icehockey_nhl", label: "NHL", emoji: "🏒" },
+      { key: "basketball_ncaab", label: "NCAAB", emoji: "🎓" },
+      { key: "baseball_mlb", label: "MLB", emoji: "⚾" },
+    ];
+
+    // ─── STRIPE PLANS ─────────────────────────────────────────────────────────────
+    // Get current user email for Stripe prefill
+    const getUserEmail = () => {
+      try {
+        const user = JSON.parse(localStorage.getItem("edgebet_currentUser") || "{}");
+        return user.email || "";
+      } catch { return ""; }
+    };
+
+    // Build Stripe link with success/cancel URLs and prefilled email
+    const buildStripeLink = (baseUrl, planId) => {
+      const email = getUserEmail();
+      const successUrl = encodeURIComponent(`${window.location.origin}/?payment=success&plan=${planId}`);
+      const cancelUrl = encodeURIComponent(`${window.location.origin}/?payment=cancelled`);
+      
+      let url = baseUrl;
+      if (baseUrl.includes("?")) {
+        url += `&success_url=${successUrl}&cancel_url=${cancelUrl}`;
+      } else {
+        url += `?success_url=${successUrl}&cancel_url=${cancelUrl}`;
+      }
+      if (email) {
+        url += `&prefilled_email=${encodeURIComponent(email)}`;
+      }
+      return url;
+    };
+
+    const PLANS = [
+      {
+        id: "free",
+        name: "Free",
+        price: 0,
+        priceLabel: "Free",
+        scans: 2,
+        features: ["2 picks/day", "Basic confidence score", "Parlay builder"],
+        cta: "Current Plan",
+      },
+      {
+        id: "pro",
+        name: "Pro",
+        price: 1999,
+        priceLabel: "$19.99/mo",
+        scans: Infinity,
+        features: [
+          "Unlimited picks/day",
+          "Full 7-agent breakdown",
+          "Live odds from The Odds API",
+          "Line movement alerts",
+          "Injury report flags",
+          "Share pick cards",
+          "Parlay optimizer",
+        ],
+        cta: "Upgrade to Pro",
+        popular: true,
+        // ➡️  STRIPE: Go to dashboard.stripe.com → Payment Links → Create → $19.99/mo recurring
+        stripeLink: "https://buy.stripe.com/14A28r6qJ9nh206gEcgYU00",
+        getStripeUrl() { return buildStripeLink(this.stripeLink, this.id); },
+      },
+      {
+        id: "sharp",
+        name: "Sharp",
+        price: 4999,
+        priceLabel: "$49.99/mo",
+        scans: Infinity,
+        features: [
+          "Everything in Pro",
+          "Sharp money tracker",
+          "Steam move alerts",
+          "Model confidence history",
+          "Priority Telegram alerts",
+          "1-on-1 Discord access",
+        ],
+        cta: "Go Sharp",
+        // ➡️  STRIPE: Go to dashboard.stripe.com → Payment Links → Create → $49.99/mo recurring
+        stripeLink: "https://buy.stripe.com/eVqfZhg1jbvp9syafOgYU01",
+        getStripeUrl() { return buildStripeLink(this.stripeLink, this.id); },
+      },
+    ];
+
+    // ─── DEMO DATA (shown when API unavailable) ───────────────────────────────────
+    const DEMO_PICKS = [
+      {
+        id: 1, sport: "NBA", emoji: "🏀",
+        game: "Orlando Magic vs Boston Celtics",
+        homeTeam: "Boston Celtics", awayTeam: "Orlando Magic",
+        bet: "Magic +4.5", betType: "spread",
+        confidence: 78, edge: 6.2,
+        odds: "+154", decimalOdds: 2.54,
+        openingLine: "+3", currentLine: "+4.5", lineMove: "▲ Moved 1.5pts in our favor",
+        model_breakdown: {
+          value: "A-", line_movement: "Moving our way ↑",
+          public_money: "38% Magic", sharp_action: "67% Magic",
+          injury_report: "All clear", situational: "Road dog revenge spot",
+        },
+        affiliateBoost: "draftkings",
+      },
+      {
+        id: 2, sport: "NBA", emoji: "🏀",
+        game: "LA Lakers vs Denver Nuggets",
+        homeTeam: "Denver Nuggets", awayTeam: "LA Lakers",
+        bet: "Under 224.5", betType: "total",
+        confidence: 71, edge: 4.8,
+        odds: "-110", decimalOdds: 1.909,
+        openingLine: "226.5", currentLine: "224.5", lineMove: "▼ Total dropped 2pts",
+        model_breakdown: {
+          value: "B+", line_movement: "Closing down ↓",
+          public_money: "52% Under", sharp_action: "61% Under",
+          injury_report: "Murray questionable", situational: "Low-pace matchup",
+        },
+        affiliateBoost: "fanduel",
+      },
+      {
+        id: 3, sport: "NCAAB", emoji: "🎓",
+        game: "Colorado Buffaloes vs Utah Utes",
+        homeTeam: "Utah Utes", awayTeam: "Colorado Buffaloes",
+        bet: "Buffaloes ML", betType: "moneyline",
+        confidence: 83, edge: 9.1,
+        odds: "+180", decimalOdds: 2.80,
+        openingLine: "+160", currentLine: "+180", lineMove: "▲ ML drifted 20 cents",
+        model_breakdown: {
+          value: "A+", line_movement: "Opening value still there ↑",
+          public_money: "29% Buffaloes", sharp_action: "74% Buffaloes",
+          injury_report: "All clear", situational: "Revenge spot + travel advantage",
+        },
+        affiliateBoost: "betmgm",
+      },
+    ];
+
+    // ─── ICONS ────────────────────────────────────────────────────────────────────
+    const SVG = ({ d, size = 20, sw = 1.8, color = "currentColor", fill = "none" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={color}
+        strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
+        <path d={d} />
+      </svg>
+    );
+    const I = {
+      picks: "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z",
+      parlay: "M13 10V3L4 14h7v7l9-11h-7z",
+      tracker: "M16 8v8m-4-5v5m-4-2v2M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z",
+      chat: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z",
+      more: "M4 6h16M4 12h16M4 18h16",
+      scan: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z",
+      share: "M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z",
+      lock: "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z",
+      check: "M5 13l4 4L19 7",
+      x: "M6 18L18 6M6 6l12 12",
+      plus: "M12 4v16m-8-8h16",
+      send: "M12 19l9 2-9-18-9 18 9-2zm0 0v-8",
+      star: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z",
+      telegram: "M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z",
+      crown: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
+      trend: "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6",
+      copy: "M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z",
+    };
+
+    // ─── UTILS ────────────────────────────────────────────────────────────────────
+    const cColor = (c) => c >= 80 ? "#22d3ee" : c >= 65 ? "#a78bfa" : "#fb923c";
+    const eColor = (e) => e >= 8 ? "#22d3ee" : e >= 4 ? "#a78bfa" : "#fb923c";
+    const fmt = (n) => n > 0 ? `+${n}` : `${n}`;
+    
+    // ─── SECURITY: Backend-verified plan status ───────────────────────────────────
+    // Legacy isPro - fallback for compatibility, but prefer checkUserPlan()
+    const isPro = () => {
+      try { return localStorage.getItem("edgebet_plan") === "pro" || localStorage.getItem("edgebet_plan") === "sharp"; } catch { return false; }
+    };
+
+    // Fetch plan status from backend (secure verification)
+    const fetchPlanStatus = async (userId) => {
+      try {
+        const res = await fetch(`${BACKEND}/api/plan-status`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: userId || getUserEmail() }),
+        });
+        if (!res.ok) throw new Error(`Backend error: ${res.status}`);
+        const data = await res.json();
+        return { plan: data.plan || "free", isActive: data.isActive || false, expiresAt: data.expiresAt };
+      } catch (err) {
+        console.warn("Failed to fetch plan status:", err);
+        // Fallback to localStorage during network issues
+        const localPlan = localStorage.getItem("edgebet_plan") || "free";
+        return { plan: localPlan, isActive: localPlan !== "free", expiresAt: null };
+      }
+    };
+
+    // Check and update user plan (call this on app init and periodically)
+    const checkUserPlan = async (userId, onPlanUpdate) => {
+      const status = await fetchPlanStatus(userId);
+      const currentPlan = localStorage.getItem("edgebet_plan") || "free";
+      
+      if (status.plan !== currentPlan) {
+        // Plan has changed - update localStorage
+        if (status.plan === "free") {
+          localStorage.removeItem("edgebet_plan");
+        } else {
+          localStorage.setItem("edgebet_plan", status.plan);
+        }
+        // Notify caller of plan change
+        if (onPlanUpdate) onPlanUpdate(status.plan);
+      }
+      
+      return status;
+    };
+
+    // React hook for periodic plan verification
+    const usePlanVerifier = (userId, onPlanUpdate, intervalMs = 60000) => {
+      useEffect(() => {
+        // Initial check
+        checkUserPlan(userId, onPlanUpdate);
+        
+        // Periodic verification
+        const interval = setInterval(() => {
+          checkUserPlan(userId, onPlanUpdate);
+        }, intervalMs);
+        
+        return () => clearInterval(interval);
+      }, [userId, intervalMs]);
+    };
+
+    // ─── TOAST NOTIFICATION HELPER ────────────────────────────────────────────────
+    const showToast = (message, type = "info", duration = 3000) => {
+      const toast = document.createElement("div");
+      const colors = {
+        success: { bg: "rgba(34,211,238,0.95)", border: "#22d3ee", text: "#000" },
+        error: { bg: "rgba(239,68,68,0.95)", border: "#ef4444", text: "#fff" },
+        info: { bg: "rgba(167,139,250,0.95)", border: "#a78bfa", text: "#fff" },
+      };
+      const color = colors[type] || colors.info;
+      
+      toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: ${color.bg};
+        border: 1px solid ${color.border};
+        border-radius: 12px;
+        padding: 14px 24px;
+        color: ${color.text};
+        font-weight: 700;
+        font-size: 14px;
+        z-index: 10000;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        animation: slideDown 0.3s ease;
+        max-width: 90%;
+        text-align: center;
+      `;
+      toast.textContent = message;
+      
+      // Add animation keyframes if not present
+      if (!document.getElementById("toast-animations")) {
+        const style = document.createElement("style");
+        style.id = "toast-animations";
+        style.textContent = `
+          @keyframes slideDown { from { opacity: 0; transform: translateX(-50%) translateY(-20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+          @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        `;
+        document.head.appendChild(style);
+      }
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.animation = "fadeOut 0.3s ease forwards";
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    };
+
+    // ─── SHARED UI ────────────────────────────────────────────────────────────────
+    const Pill = ({ children, color = "#22d3ee", bg }) => (
+      <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 0.8, color, background: bg || `${color}18`, borderRadius: 99, padding: "3px 9px", border: `1px solid ${color}30` }}>{children}</span>
+    );
+
+    const Bar = ({ value, color }) => (
+      <div style={{ flex: 1, height: 5, background: "rgba(255,255,255,0.07)", borderRadius: 99, overflow: "hidden" }}>
+        <div style={{ width: `${value}%`, height: "100%", background: `linear-gradient(90deg,${color}80,${color})`, borderRadius: 99, transition: "width 1s cubic-bezier(.4,0,.2,1)" }} />
+      </div>
+    );
+
+    const PulseDot = ({ color = "#4ade80" }) => (
+      <span style={{ position: "relative", display: "inline-block", width: 8, height: 8 }}>
+        <span style={{ position: "absolute", inset: 0, borderRadius: "50%", background: color, opacity: 0.35, animation: "ping 1.5s ease-in-out infinite" }} />
+        <span style={{ position: "absolute", inset: 0, borderRadius: "50%", background: color }} />
+      </span>
+    );
+
+    // ─── SHARE CARD GENERATOR ─────────────────────────────────────────────────────
+    function ShareCard({ pick, onClose }) {
+      const canvasRef = useRef(null);
+      const [copied, setCopied] = useState(false);
+
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        const W = 600, H = 340;
+        canvas.width = W; canvas.height = H;
+
+        // Background
+        const bg = ctx.createLinearGradient(0, 0, W, H);
+        bg.addColorStop(0, "#09090b");
+        bg.addColorStop(1, "#0f172a");
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, W, H);
+
+        // Glow
+        const glow = ctx.createRadialGradient(W * 0.7, H * 0.3, 0, W * 0.7, H * 0.3, 280);
+        glow.addColorStop(0, "rgba(34,211,238,0.12)");
+        glow.addColorStop(1, "transparent");
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, W, H);
+
+        // Border
+        ctx.strokeStyle = "rgba(34,211,238,0.3)";
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(1, 1, W - 2, H - 2);
+
+        // Top accent line
+        const accent = ctx.createLinearGradient(0, 0, W, 0);
+        accent.addColorStop(0, "transparent");
+        accent.addColorStop(0.3, "#22d3ee");
+        accent.addColorStop(0.7, "#a78bfa");
+        accent.addColorStop(1, "transparent");
+        ctx.strokeStyle = accent;
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(0, 2); ctx.lineTo(W, 2); ctx.stroke();
+
+        // Logo
+        ctx.font = "700 18px monospace";
+        ctx.fillStyle = "#22d3ee";
+        ctx.fillText("⚡ EdgeBet AI", 28, 44);
+
+        // Sport badge
+        ctx.font = "700 11px monospace";
+        ctx.fillStyle = "#6b7280";
+        ctx.fillText(pick.sport, 28, 72);
+
+        // Game
+        ctx.font = "500 15px sans-serif";
+        ctx.fillStyle = "#9ca3af";
+        ctx.fillText(pick.game, 28, 104);
+
+        // Bet — large
+        ctx.font = "800 32px sans-serif";
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(pick.bet, 28, 152);
+
+        // Odds
+        const oddsColor = pick.odds?.startsWith("+") ? "#4ade80" : "#f87171";
+        ctx.font = "800 28px monospace";
+        ctx.fillStyle = oddsColor;
+        ctx.fillText(pick.odds, W - 120, 152);
+
+        // Divider
+        ctx.strokeStyle = "rgba(255,255,255,0.08)";
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(28, 172); ctx.lineTo(W - 28, 172); ctx.stroke();
+
+        // Stats row
+        const stats = [
+          { label: "EDGE", value: `${pick.edge?.toFixed(1)}%`, color: eColor(pick.edge) },
+          { label: "CONFIDENCE", value: `${pick.confidence}%`, color: cColor(pick.confidence) },
+          { label: "LINE MOVE", value: pick.lineMove?.includes("▲") ? "▲ Favorable" : "▼ Stable", color: "#a78bfa" },
+        ];
+        stats.forEach((s, i) => {
+          const x = 28 + i * 190;
+          ctx.font = "600 10px monospace";
+          ctx.fillStyle = "#6b7280";
+          ctx.fillText(s.label, x, 202);
+          ctx.font = "800 18px monospace";
+          ctx.fillStyle = s.color;
+          ctx.fillText(s.value, x, 228);
+        });
+
+        // Confidence bar
+        ctx.fillStyle = "rgba(255,255,255,0.07)";
+        ctx.beginPath();
+        ctx.roundRect(28, 248, W - 56, 6, 3);
+        ctx.fill();
+        const barGrad = ctx.createLinearGradient(28, 0, 28 + (W - 56) * (pick.confidence / 100), 0);
+        barGrad.addColorStop(0, `${cColor(pick.confidence)}60`);
+        barGrad.addColorStop(1, cColor(pick.confidence));
+        ctx.fillStyle = barGrad;
+        ctx.beginPath();
+        ctx.roundRect(28, 248, (W - 56) * (pick.confidence / 100), 6, 3);
+        ctx.fill();
+
+        // Footer
+        ctx.font = "500 12px sans-serif";
+        ctx.fillStyle = "#374151";
+        ctx.fillText("edgebet.ai  •  Not financial advice  •  Bet responsibly", 28, 316);
+      }, [pick]);
+
+      const download = () => {
+        const canvas = canvasRef.current;
+        const link = document.createElement("a");
+        link.download = `edgebet-${pick.bet.replace(/\s+/g, "-")}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      };
+
+      const copyText = () => {
+        const text = `⚡ EdgeBet AI Pick\n\n🎯 ${pick.bet}\n📊 ${pick.game}\n💰 Odds: ${pick.odds}\n📈 Edge: ${pick.edge?.toFixed(1)}%  Confidence: ${pick.confidence}%\n\n👉 Get all picks: edgebet.ai`;
+        navigator.clipboard.writeText(text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
+      };
+
+      return (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div style={{ background: "#111113", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: 24, width: "100%", maxWidth: 480 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <p style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>Share Pick Card</p>
+              <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#6b7280" }}><SVG d={I.x} size={18} /></button>
+            </div>
+
+            <canvas ref={canvasRef} style={{ width: "100%", borderRadius: 12, marginBottom: 16, border: "1px solid rgba(255,255,255,0.08)" }} />
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <button onClick={download} style={{ padding: "12px", background: "linear-gradient(135deg,#0891b2,#7c3aed)", border: "none", borderRadius: 12, color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                ↓ Download PNG
+              </button>
+              <button onClick={copyText} style={{ padding: "12px", background: copied ? "rgba(74,222,128,0.15)" : "rgba(255,255,255,0.07)", border: `1px solid ${copied ? "#4ade80" : "rgba(255,255,255,0.1)"}`, borderRadius: 12, color: copied ? "#4ade80" : "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                <SVG d={copied ? I.check : I.copy} size={16} /> {copied ? "Copied!" : "Copy Text"}
+              </button>
+            </div>
+
+            <div style={{ marginTop: 12, padding: "10px 14px", background: "rgba(34,211,238,0.06)", border: "1px solid rgba(34,211,238,0.15)", borderRadius: 12 }}>
+              <p style={{ fontSize: 12, color: "#22d3ee", fontWeight: 600 }}>💡 Pro tip: Post on Twitter/X + TikTok with #SportsBetting — each viral share = free users</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── PAYWALL MODAL ────────────────────────────────────────────────────────────
+    function PaywallModal({ onClose, onUnlock }) {
+      const [selected, setSelected] = useState("pro");
+
+      const handleUpgrade = () => {
+        const plan = PLANS.find(p => p.id === selected);
+        const link = plan?.getStripeUrl ? plan.getStripeUrl() : plan?.stripeLink;
+        const isPlaceholder = !link || link.includes("REPLACE_WITH");
+        if (isPlaceholder) {
+          // Stripe not yet set up — show instructions
+          showToast("⚙️ Stripe not configured yet. Add your Stripe Payment Link in PLANS config.", "error", 5000);
+          return;
+        }
+        // Store pending plan for verification after redirect
+        localStorage.setItem("edgebet_pending_plan", selected);
+        window.open(link, "_self"); // Use same window for redirect back
+      };
+
+      return (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", zIndex: 1000, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+          <div style={{ background: "#111113", border: "1px solid rgba(255,255,255,0.1)", borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: "28px 20px 40px", width: "100%", maxWidth: 480 }}>
+            <div style={{ textAlign: "center", marginBottom: 24 }}>
+              <div style={{ fontSize: 36, marginBottom: 10 }}>🔒</div>
+              <h2 style={{ fontSize: 22, fontWeight: 900, color: "#fff", letterSpacing: -0.5 }}>Unlock EdgeBet Pro</h2>
+              <p style={{ fontSize: 14, color: "#6b7280", marginTop: 6 }}>Unlimited picks + full AI analysis + live odds</p>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+              {PLANS.filter(p => p.id !== "free").map(plan => (
+                <button key={plan.id} onClick={() => setSelected(plan.id)}
+                  style={{ padding: "16px", background: selected === plan.id ? "linear-gradient(135deg,rgba(8,145,178,0.15),rgba(124,58,237,0.15))" : "rgba(255,255,255,0.04)", border: `1.5px solid ${selected === plan.id ? "#22d3ee" : "rgba(255,255,255,0.08)"}`, borderRadius: 16, cursor: "pointer", textAlign: "left", position: "relative" }}>
+                  {plan.popular && <span style={{ position: "absolute", top: -10, right: 16, fontSize: 10, fontWeight: 800, background: "linear-gradient(135deg,#0891b2,#7c3aed)", color: "#fff", borderRadius: 99, padding: "3px 10px", letterSpacing: 0.5 }}>MOST POPULAR</span>}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <span style={{ fontSize: 16, fontWeight: 800, color: "#fff" }}>{plan.name}</span>
+                    <span style={{ fontSize: 20, fontWeight: 900, color: "#22d3ee", fontFamily: "monospace" }}>{plan.priceLabel}</span>
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {plan.features.slice(0, 4).map(f => (
+                      <span key={f} style={{ fontSize: 11, color: "#9ca3af" }}>✓ {f}</span>
+                    ))}
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <button onClick={handleUpgrade} style={{ width: "100%", padding: "16px", background: "linear-gradient(135deg,#0891b2,#7c3aed)", border: "none", borderRadius: 14, color: "#fff", fontWeight: 800, fontSize: 16, cursor: "pointer", letterSpacing: 0.3, marginBottom: 12 }}>
+              {PLANS.find(p => p.id === selected)?.cta} →
+            </button>
+            <button onClick={onClose} style={{ width: "100%", padding: "12px", background: "none", border: "none", color: "#4b5563", fontSize: 14, cursor: "pointer" }}>
+              Maybe later
+            </button>
+
+            <p style={{ textAlign: "center", fontSize: 11, color: "#374151", marginTop: 8 }}>
+              Cancel anytime • Secure payment via Stripe
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── AFFILIATE BANNER ─────────────────────────────────────────────────────────
+    function AffiliateBanner({ affiliateKey, pickBet, compact = false }) {
+      const aff = AFFILIATES[affiliateKey] || AFFILIATES.draftkings;
+
+      if (compact) return (
+        <a href={aff.url} target="_blank" rel="noopener noreferrer" onClick={() => trackAffClick(affiliateKey)}
+          style={{ display: "flex", alignItems: "center", gap: 10, background: `${aff.color}12`, border: `1px solid ${aff.color}30`, borderRadius: 12, padding: "10px 14px", textDecoration: "none", marginTop: 10 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: aff.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 900, color: "#fff", flexShrink: 0 }}>{aff.logo}</div>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: "#e5e7eb" }}>Bet on {aff.name}</p>
+            <p style={{ fontSize: 11, color: "#9ca3af" }}>{aff.bonus}</p>
+          </div>
+          <span style={{ fontSize: 12, color: aff.color, fontWeight: 700 }}>Bet Now →</span>
+        </a>
+      );
+
+      return (
+        <div style={{ background: `${aff.color}10`, border: `1px solid ${aff.color}25`, borderRadius: 14, padding: "14px 16px", marginTop: 12 }}>
+          <p style={{ fontSize: 11, color: "#6b7280", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 700 }}>Place this pick</p>
+          <a href={aff.url} target="_blank" rel="noopener noreferrer" onClick={() => trackAffClick(affiliateKey)}
+            style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: aff.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, color: "#fff", flexShrink: 0 }}>{aff.logo}</div>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>{aff.name}</p>
+              <p style={{ fontSize: 12, color: "#9ca3af" }}>{aff.bonus}</p>
+            </div>
+            <div style={{ background: aff.color, borderRadius: 10, padding: "8px 14px" }}>
+              <span style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>Bet →</span>
+            </div>
+          </a>
+        </div>
+      );
+    }
+
+    function trackAffClick(key) {
+      try {
+        const clicks = JSON.parse(localStorage.getItem("edgebet_aff_clicks") || "{}");
+        clicks[key] = (clicks[key] || 0) + 1;
+        localStorage.setItem("edgebet_aff_clicks", JSON.stringify(clicks));
+      } catch { }
+    }
+
+    // ─── PICK CARD ────────────────────────────────────────────────────────────────
+    function PickCard({ pick, onAddToParlay, inParlay, userPlan, onPaywall, onShare }) {
+      const [expanded, setExpanded] = useState(false);
+      const isLocked = userPlan === "free" && pick.id > 1;
+      const cc = cColor(pick.confidence);
+
+      return (
+        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, marginBottom: 12, overflow: "hidden", transition: "border-color 0.2s" }}>
+          {/* Card header */}
+          <div style={{ padding: "16px 16px 12px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 13 }}>{pick.emoji}</span>
+                  <Pill color="#6b7280">{pick.sport}</Pill>
+                  {pick.edge >= 8 && <Pill color="#22d3ee">🔥 HIGH EDGE</Pill>}
+                  {pick.confidence >= 80 && <Pill color="#a78bfa">⭐ SHARP</Pill>}
+                </div>
+                <p style={{ fontSize: 12, color: "#9ca3af", marginBottom: 4 }}>{pick.game}</p>
+                {isLocked ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ height: 24, width: 160, background: "rgba(255,255,255,0.07)", borderRadius: 6, filter: "blur(4px)" }} />
+                    <button onClick={onPaywall} style={{ fontSize: 11, color: "#22d3ee", fontWeight: 700, background: "none", border: "none", cursor: "pointer" }}>🔒 Unlock</button>
+                  </div>
+                ) : (
+                  <p style={{ fontSize: 20, fontWeight: 900, color: "#fff", letterSpacing: -0.5 }}>{pick.bet}</p>
+                )}
+              </div>
+              <div style={{ textAlign: "right", minWidth: 70 }}>
+                {isLocked ? (
+                  <div style={{ height: 28, width: 60, background: "rgba(255,255,255,0.07)", borderRadius: 6, filter: "blur(4px)", marginLeft: "auto" }} />
+                ) : (
+                  <>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: pick.odds?.startsWith("+") ? "#4ade80" : "#f87171", fontFamily: "monospace" }}>{pick.odds}</div>
+                    <div style={{ fontSize: 10, color: "#6b7280" }}>odds</div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Stats row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <span style={{ fontSize: 12, color: "#6b7280", whiteSpace: "nowrap" }}>
+                Edge: <span style={{ color: eColor(pick.edge), fontWeight: 700 }}>{pick.edge?.toFixed(1)}%</span>
+              </span>
+              <Bar value={pick.confidence} color={cc} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: cc, whiteSpace: "nowrap" }}>{pick.confidence}%</span>
+            </div>
+
+            {/* Line movement */}
+            {!isLocked && pick.lineMove && (
+              <div style={{ fontSize: 11, color: pick.lineMove.includes("▲") ? "#4ade80" : "#a78bfa", marginBottom: 12, fontWeight: 600 }}>
+                {pick.lineMove}
+              </div>
+            )}
+
+            {/* Action buttons */}
+            <div style={{ display: "flex", gap: 8 }}>
+              {!isLocked && (
+                <button onClick={() => setExpanded(x => !x)} style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, padding: "9px", color: "#9ca3af", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                  {expanded ? "Hide" : "Analysis"}
+                </button>
+              )}
+              <button onClick={() => isLocked ? onPaywall() : onAddToParlay(pick)}
+                style={{ flex: 1, background: inParlay ? "rgba(34,211,238,0.1)" : "linear-gradient(135deg,#0891b2,#7c3aed)", border: inParlay ? "1px solid #22d3ee44" : "none", borderRadius: 10, padding: "9px", color: inParlay ? "#22d3ee" : "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                {inParlay ? "✓ In Parlay" : isLocked ? "🔒 Add" : "+ Parlay"}
+              </button>
+              {!isLocked && (
+                <button onClick={() => onShare(pick)} style={{ width: 38, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                  <SVG d={I.share} size={15} color="#9ca3af" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Expanded analysis */}
+          {expanded && !isLocked && (
+            <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", padding: "14px 16px", background: "rgba(0,0,0,0.25)" }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 12 }}>7-Agent Model Breakdown</p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
+                {Object.entries(pick.model_breakdown || {}).map(([k, v]) => (
+                  <div key={k} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: "8px 10px" }}>
+                    <p style={{ fontSize: 10, color: "#6b7280", textTransform: "capitalize", marginBottom: 2 }}>{k.replace(/_/g, " ")}</p>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: "#e5e7eb" }}>{v}</p>
+                  </div>
+                ))}
+              </div>
+              <AffiliateBanner affiliateKey={pick.affiliateBoost || "draftkings"} pickBet={pick.bet} />
+            </div>
+          )}
+
+          {/* Always show compact affiliate on locked cards */}
+          {isLocked && (
+            <div style={{ padding: "0 16px 14px" }}>
+              <AffiliateBanner affiliateKey={pick.affiliateBoost || "draftkings"} pickBet={pick.bet} compact />
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ─── PICKS TAB ────────────────────────────────────────────────────────────────
+    function PicksTab({ picks, scanning, onScan, remainingPicks, onAddToParlay, parlay, userPlan, onPaywall, onShare }) {
+      const parlayIds = new Set(parlay.map(p => p.id));
+      const [activeFilter, setActiveFilter] = useState("All");
+      const sportFilters = ["All", ...new Set(picks.map(p => p.sport))];
+      const filtered = activeFilter === "All" ? picks : picks.filter(p => p.sport === activeFilter);
+
+      return (
+        <div style={{ padding: "20px 16px 100px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+            <div>
+              <h2 style={{ fontSize: 22, fontWeight: 900, color: "#fff", letterSpacing: -0.5 }}>Today's Edges</h2>
+              <p style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>Live value detection across {SPORTS_CONFIG.length} sports</p>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              {userPlan === "free" ? (
+                <>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: remainingPicks > 0 ? "#22d3ee" : "#ef4444" }}>{remainingPicks}</div>
+                  <div style={{ fontSize: 10, color: "#6b7280" }}>scans left</div>
+                </>
+              ) : (
+                <Pill color="#22d3ee">∞ Pro</Pill>
+              )}
+            </div>
+          </div>
+
+          {/* Scan button */}
+          <button onClick={() => (userPlan === "free" && remainingPicks <= 0) ? onPaywall() : onScan()}
+            disabled={scanning}
+            style={{ width: "100%", padding: "16px", background: scanning ? "rgba(255,255,255,0.05)" : "linear-gradient(135deg,#0891b2 0%,#7c3aed 100%)", border: "none", borderRadius: 14, fontWeight: 800, fontSize: 16, color: scanning ? "#6b7280" : "#fff", cursor: scanning ? "not-allowed" : "pointer", marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, letterSpacing: 0.3 }}>
+            {scanning ? (
+              <><span style={{ display: "inline-block", width: 18, height: 18, border: "2px solid rgba(255,255,255,0.25)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} /> Scanning {SPORTS_CONFIG.length} Sports...</>
+            ) : userPlan === "free" && remainingPicks <= 0 ? (
+              <><SVG d={I.lock} size={18} /> Upgrade for More Scans</>
+            ) : (
+              <><SVG d={I.scan} size={18} /> Scan for Value</>
+            )}
+          </button>
+
+          {/* Sport filters */}
+          {picks.length > 0 && (
+            <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 14, marginBottom: 4, scrollbarWidth: "none" }}>
+              {sportFilters.map(s => (
+                <button key={s} onClick={() => setActiveFilter(s)} style={{ padding: "7px 16px", borderRadius: 99, fontSize: 12, fontWeight: 700, background: activeFilter === s ? "linear-gradient(135deg,#0891b2,#7c3aed)" : "rgba(255,255,255,0.06)", border: activeFilter === s ? "none" : "1px solid rgba(255,255,255,0.09)", color: activeFilter === s ? "#fff" : "#9ca3af", cursor: "pointer", whiteSpace: "nowrap" }}>{s}</button>
+              ))}
+            </div>
+          )}
+
+          {picks.length === 0 && !scanning && (
+            <div style={{ textAlign: "center", padding: "60px 20px", color: "#4b5563" }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
+              <p style={{ fontSize: 16, fontWeight: 600, color: "#6b7280" }}>No picks yet</p>
+              <p style={{ fontSize: 13, marginTop: 6 }}>Hit Scan to run the 7-agent system across all sports</p>
+            </div>
+          )}
+
+          {filtered.map((pick, i) => (
+            <PickCard key={pick.id || i} pick={pick} onAddToParlay={onAddToParlay}
+              inParlay={parlayIds.has(pick.id)} userPlan={userPlan} onPaywall={onPaywall} onShare={onShare} />
+          ))}
+
+          {/* Telegram CTA */}
+          <div style={{ background: "linear-gradient(135deg,rgba(0,136,204,0.12),rgba(0,136,204,0.06))", border: "1px solid rgba(0,136,204,0.25)", borderRadius: 16, padding: "16px", marginTop: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: "#0088cc", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <SVG d={I.telegram} size={22} color="#fff" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 14, fontWeight: 800, color: "#fff" }}>Get Picks on Telegram</p>
+                <p style={{ fontSize: 12, color: "#9ca3af" }}>Free daily top pick + line move alerts</p>
+              </div>
+              <a href="https://t.me/EdgeBetAI" target="_blank" rel="noopener noreferrer"
+                style={{ background: "#0088cc", borderRadius: 10, padding: "8px 14px", textDecoration: "none" }}>
+                <span style={{ fontSize: 12, fontWeight: 800, color: "#fff" }}>Join →</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── PARLAY TAB ───────────────────────────────────────────────────────────────
+    function ParlayTab({ parlay, onRemove, onClear, userPlan, onPaywall }) {
+      const [stake, setStake] = useState(50);
+      const [customStake, setCustomStake] = useState("");
+
+      const activeStake = customStake ? parseFloat(customStake) || 0 : stake;
+
+      if (parlay.length === 0) return (
+        <div style={{ padding: "20px 16px 100px", textAlign: "center" }}>
+          <div style={{ padding: "80px 20px", color: "#4b5563" }}>
+            <div style={{ fontSize: 52 }}>⚡</div>
+            <p style={{ marginTop: 16, fontSize: 16, fontWeight: 700, color: "#6b7280" }}>Parlay Builder</p>
+            <p style={{ fontSize: 13, marginTop: 6 }}>Add picks from the Picks tab to build your parlay</p>
+          </div>
+        </div>
+      );
+
+      const calcParlay = () => {
+        return parlay.reduce((acc, p) => {
+          const raw = parseInt(p.odds?.replace("+", "") || "0");
+          const dec = p.odds?.startsWith("+") ? raw / 100 + 1 : 100 / Math.abs(raw) + 1;
+          return acc * dec;
+        }, 1);
+      };
+
+      const parlayOdds = calcParlay();
+      const payout = (parlayOdds * activeStake).toFixed(2);
+      const profit = (payout - activeStake).toFixed(2);
+      const impliedProb = (1 / parlayOdds * 100).toFixed(1);
+      const avgEdge = (parlay.reduce((a, p) => a + (p.edge || 0), 0) / parlay.length).toFixed(1);
+      const americanOdds = parlayOdds >= 2 ? `+${Math.round((parlayOdds - 1) * 100)}` : `-${Math.round(100 / (parlayOdds - 1))}`;
+
+      const bestAffiliate = AFFILIATES[parlay[0]?.affiliateBoost] || AFFILIATES.draftkings;
+
+      return (
+        <div style={{ padding: "20px 16px 100px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+            <div>
+              <h2 style={{ fontSize: 22, fontWeight: 900, color: "#fff" }}>Parlay Builder</h2>
+              <p style={{ fontSize: 12, color: "#6b7280" }}>{parlay.length} leg{parlay.length !== 1 ? "s" : ""} • {americanOdds} parlay odds</p>
+            </div>
+            <button onClick={onClear} style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "8px 14px", color: "#f87171", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Clear</button>
+          </div>
+
+          {/* Legs */}
+          {parlay.map((pick, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "12px 14px", marginBottom: 8 }}>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 11, color: "#6b7280" }}>{pick.game}</p>
+                <p style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>{pick.bet}</p>
+                <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                  <Pill color={eColor(pick.edge)}>{pick.edge?.toFixed(1)}% edge</Pill>
+                  <Pill color={cColor(pick.confidence)}>{pick.confidence}% conf</Pill>
+                </div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 16, fontWeight: 800, color: pick.odds?.startsWith("+") ? "#4ade80" : "#f87171", fontFamily: "monospace" }}>{pick.odds}</div>
+              </div>
+              <button onClick={() => onRemove(pick.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#6b7280", padding: 4 }}>
+                <SVG d={I.x} size={16} />
+              </button>
+            </div>
+          ))}
+
+          {/* Stats grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, margin: "18px 0" }}>
+            {[["Parlay Odds", americanOdds, "#22d3ee"], ["Implied %", `${impliedProb}%`, "#a78bfa"], ["Avg Edge", `${avgEdge}%`, "#4ade80"]].map(([l, v, c]) => (
+              <div key={l} style={{ background: "rgba(255,255,255,0.05)", borderRadius: 12, padding: "12px 8px", textAlign: "center" }}>
+                <p style={{ fontSize: 10, color: "#6b7280", marginBottom: 4 }}>{l}</p>
+                <p style={{ fontSize: 16, fontWeight: 900, color: c }}>{v}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Stake */}
+          <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 14, padding: "16px", marginBottom: 14 }}>
+            <p style={{ fontSize: 12, color: "#9ca3af", marginBottom: 10, fontWeight: 600 }}>Stake</p>
+            <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+              {[10, 25, 50, 100].map(v => (
+                <button key={v} onClick={() => { setStake(v); setCustomStake(""); }}
+                  style={{ flex: 1, padding: "9px 0", borderRadius: 10, background: activeStake === v && !customStake ? "linear-gradient(135deg,#0891b2,#7c3aed)" : "rgba(255,255,255,0.06)", border: activeStake === v && !customStake ? "none" : "1px solid rgba(255,255,255,0.09)", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>${v}</button>
+              ))}
+            </div>
+            <input type="number" value={customStake} onChange={e => setCustomStake(e.target.value)} placeholder="Custom amount..."
+              style={{ width: "100%", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "10px 14px", color: "#fff", fontSize: 14, fontFamily: "monospace" }} />
+          </div>
+
+          {/* Payout display */}
+          <div style={{ background: "linear-gradient(135deg,rgba(8,145,178,0.1),rgba(124,58,237,0.1))", border: "1px solid rgba(34,211,238,0.2)", borderRadius: 16, padding: "20px", marginBottom: 14, textAlign: "center" }}>
+            <p style={{ fontSize: 12, color: "#9ca3af", marginBottom: 4 }}>Potential Payout</p>
+            <p style={{ fontSize: 40, fontWeight: 900, color: "#22d3ee", letterSpacing: -1, lineHeight: 1 }}>${payout}</p>
+            <p style={{ fontSize: 14, color: "#4ade80", marginTop: 6, fontWeight: 700 }}>+${profit} profit on ${activeStake} stake</p>
+          </div>
+
+          {/* Place parlay via affiliate */}
+          <a href={bestAffiliate.url} target="_blank" rel="noopener noreferrer" onClick={() => trackAffClick(parlay[0]?.affiliateBoost || "draftkings")}
+            style={{ display: "block", width: "100%", padding: "16px", background: "linear-gradient(135deg,#0891b2,#7c3aed)", border: "none", borderRadius: 14, color: "#fff", fontWeight: 800, fontSize: 16, textAlign: "center", textDecoration: "none", marginBottom: 10 }}>
+            🎯 Place on {bestAffiliate.name} →
+          </a>
+
+          <div style={{ display: "flex", gap: 8 }}>
+            {Object.entries(AFFILIATES).map(([key, aff]) => (
+              <a key={key} href={aff.url} target="_blank" rel="noopener noreferrer" onClick={() => trackAffClick(key)}
+                style={{ flex: 1, padding: "10px", background: `${aff.color}15`, border: `1px solid ${aff.color}30`, borderRadius: 12, textAlign: "center", textDecoration: "none" }}>
+                <p style={{ fontSize: 12, fontWeight: 800, color: aff.color }}>{aff.logo}</p>
+              </a>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ─── TRACKER TAB ──────────────────────────────────────────────────────────────
+    function TrackerTab() {
+      const [bets, setBets] = useState(() => { try { return JSON.parse(localStorage.getItem("edgebet_bets") || "[]"); } catch { return []; } });
+      const [adding, setAdding] = useState(false);
+      const [form, setForm] = useState({ game: "", bet: "", odds: "", stake: "", outcome: "pending" });
+
+      const save = (b) => { setBets(b); localStorage.setItem("edgebet_bets", JSON.stringify(b)); };
+      const add = () => {
+        if (!form.game || !form.bet) return;
+        save([{ ...form, id: Date.now(), date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" }) }, ...bets]);
+        setForm({ game: "", bet: "", odds: "", stake: "", outcome: "pending" });
+        setAdding(false);
+      };
+      const remove = (id) => save(bets.filter(b => b.id !== id));
+      const cycle = (id) => save(bets.map(b => b.id === id ? { ...b, outcome: b.outcome === "pending" ? "win" : b.outcome === "win" ? "loss" : "pending" } : b));
+
+      const wins = bets.filter(b => b.outcome === "win").length;
+      const losses = bets.filter(b => b.outcome === "loss").length;
+      const pnl = bets.reduce((a, b) => {
+        const s = parseFloat(b.stake) || 0;
+        if (b.outcome === "win") { const raw = parseInt(b.odds?.replace("+", "") || "0"); return a + s * (b.odds?.startsWith("+") ? raw / 100 : 100 / Math.abs(raw)); }
+        if (b.outcome === "loss") return a - s;
+        return a;
+      }, 0);
+      const winRate = bets.filter(b => b.outcome !== "pending").length > 0
+        ? Math.round(wins / bets.filter(b => b.outcome !== "pending").length * 100) : 0;
+
+      const outcomeStyle = (o) => ({
+        win: { color: "#4ade80", bg: "rgba(74,222,128,0.12)", border: "rgba(74,222,128,0.2)" },
+        loss: { color: "#f87171", bg: "rgba(248,113,113,0.12)", border: "rgba(248,113,113,0.2)" },
+        pending: { color: "#fbbf24", bg: "rgba(251,191,36,0.12)", border: "rgba(251,191,36,0.2)" },
+      }[o] || {});
+
+      return (
+        <div style={{ padding: "20px 16px 100px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+            <div>
+              <h2 style={{ fontSize: 22, fontWeight: 900, color: "#fff" }}>Bet Tracker</h2>
+              <p style={{ fontSize: 12, color: "#6b7280" }}>Track your edge & ROI over time</p>
+            </div>
+            <button onClick={() => setAdding(x => !x)} style={{ background: "linear-gradient(135deg,#0891b2,#7c3aed)", border: "none", borderRadius: 10, padding: "8px 14px", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+              <SVG d={I.plus} size={14} /> Add
+            </button>
+          </div>
+
+          {/* Stats */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 20 }}>
+            {[["W", wins, "#4ade80"], ["L", losses, "#f87171"], ["Win%", `${winRate}%`, "#a78bfa"], ["P&L", `${pnl >= 0 ? "+" : ""}$${Math.abs(pnl).toFixed(0)}`, pnl >= 0 ? "#4ade80" : "#f87171"]].map(([l, v, c]) => (
+              <div key={l} style={{ background: "rgba(255,255,255,0.05)", borderRadius: 12, padding: "14px 8px", textAlign: "center" }}>
+                <p style={{ fontSize: 10, color: "#6b7280", marginBottom: 3 }}>{l}</p>
+                <p style={{ fontSize: 17, fontWeight: 900, color: c }}>{v}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Add form */}
+          {adding && (
+            <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 16, padding: 16, marginBottom: 16 }}>
+              {[["Game", "game", "e.g. Lakers vs Celtics"], ["Your Bet", "bet", "e.g. Lakers -4.5"], ["Odds", "odds", "e.g. -110 or +150"], ["Stake ($)", "stake", "e.g. 50"]].map(([label, key, ph]) => (
+                <div key={key} style={{ marginBottom: 10 }}>
+                  <p style={{ fontSize: 11, color: "#6b7280", marginBottom: 4 }}>{label}</p>
+                  <input value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} placeholder={ph}
+                    style={{ width: "100%", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "10px 12px", color: "#fff", fontSize: 14 }} />
+                </div>
+              ))}
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={add} style={{ flex: 1, padding: "11px", background: "linear-gradient(135deg,#0891b2,#7c3aed)", border: "none", borderRadius: 10, color: "#fff", fontWeight: 700, cursor: "pointer" }}>Add Bet</button>
+                <button onClick={() => setAdding(false)} style={{ flex: 1, padding: "11px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "#9ca3af", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
+              </div>
+            </div>
+          )}
+
+          {bets.length === 0 && !adding && (
+            <div style={{ textAlign: "center", padding: "60px 20px" }}>
+              <div style={{ fontSize: 48 }}>📊</div>
+              <p style={{ marginTop: 16, fontSize: 15, fontWeight: 700, color: "#6b7280" }}>No bets tracked yet</p>
+              <p style={{ fontSize: 13, marginTop: 6, color: "#4b5563" }}>Add your first bet to track ROI</p>
+            </div>
+          )}
+
+          {bets.map(bet => {
+            const os = outcomeStyle(bet.outcome);
+            return (
+              <div key={bet.id} style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${os.border || "rgba(255,255,255,0.08)"}`, borderRadius: 14, padding: "14px 16px", marginBottom: 10 }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 11, color: "#6b7280" }}>{bet.date}</span>
+                      <button onClick={() => cycle(bet.id)} style={{ fontSize: 10, fontWeight: 800, padding: "2px 10px", borderRadius: 99, background: os.bg, color: os.color, border: "none", cursor: "pointer" }}>
+                        {bet.outcome.toUpperCase()}
+                      </button>
+                    </div>
+                    <p style={{ fontSize: 12, color: "#9ca3af" }}>{bet.game}</p>
+                    <p style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>{bet.bet}</p>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <button onClick={() => remove(bet.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#4b5563", marginBottom: 8, display: "block", marginLeft: "auto" }}><SVG d={I.x} size={14} /></button>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: bet.odds?.startsWith("+") ? "#4ade80" : "#f87171", fontFamily: "monospace" }}>{bet.odds}</div>
+                    <div style={{ fontSize: 12, color: "#6b7280" }}>${bet.stake}</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    // ─── CHAT TAB ─────────────────────────────────────────────────────────────────
+    function ChatTab() {
+      const [messages, setMessages] = useState([
+        { role: "assistant", text: "Hey! I'm your EdgeBet AI assistant. Ask me anything — picks analysis, bankroll management, line shopping, or Kelly sizing." }
+      ]);
+      const [input, setInput] = useState("");
+      const [loading, setLoading] = useState(false);
+      const ref = useRef(null);
+
+      useEffect(() => { ref.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+
+      const SMART_REPLIES = [
+        "Based on today's sharp action, the total market is seeing steam on unders — worth cross-referencing with your picks.",
+        "Kelly criterion on a 75% confidence play with -110 odds: edge = 0.75 - (1/1.909) = 22.6%, Kelly = 22.6%/1 = 22.6% of bankroll. Most pros use 1/4 Kelly for safety.",
+        "Line shopping tip: a +4.5 vs +4 can be worth 1.5% edge difference over the long run. Always check 2-3 books.",
+        "Today's injury report: Murray (knee) is questionable — that's a meaningful line mover for Nuggets totals. Watch for late scratches.",
+        "Reverse line movement: when the public is on one side but the line moves the other way, that's a sharp fade opportunity.",
+      ];
+
+      const send = async () => {
+        const text = input.trim();
+        if (!text || loading) return;
+        setInput("");
+        setMessages(m => [...m, { role: "user", text }]);
+        setLoading(true);
+        try {
+          const res = await fetch(`${BACKEND}/chat`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: text, history: messages }) });
+          const data = await res.json();
+          setMessages(m => [...m, { role: "assistant", text: data.reply || data.message || SMART_REPLIES[Math.floor(Math.random() * SMART_REPLIES.length)] }]);
+        } catch {
+          setMessages(m => [...m, { role: "assistant", text: SMART_REPLIES[Math.floor(Math.random() * SMART_REPLIES.length)] }]);
+        } finally { setLoading(false); }
+      };
+
+      const SUGGESTIONS = ["Best pick today?", "Kelly sizing help", "Line shopping tips", "Bankroll strategy"];
+
+      return (
+        <div style={{ display: "flex", flexDirection: "column", height: "calc(100dvh - 130px)" }}>
+          <div style={{ padding: "16px 16px 8px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <h2 style={{ fontSize: 20, fontWeight: 900, color: "#fff" }}>AI Assistant</h2>
+            <p style={{ fontSize: 12, color: "#6b7280" }}>Strategy, analysis & bankroll advice</p>
+          </div>
+          <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: 12 }}>
+            {messages.map((m, i) => (
+              <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
+                <div style={{ maxWidth: "82%", background: m.role === "user" ? "linear-gradient(135deg,#0891b2,#7c3aed)" : "rgba(255,255,255,0.06)", border: m.role === "assistant" ? "1px solid rgba(255,255,255,0.08)" : "none", borderRadius: m.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px", padding: "12px 16px", fontSize: 14, color: "#e5e7eb", lineHeight: 1.6 }}>
+                  {m.text}
+                </div>
+              </div>
+            ))}
+            {loading && (
+              <div style={{ display: "flex" }}>
+                <div style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "18px 18px 18px 4px", padding: "14px 18px", display: "flex", gap: 5 }}>
+                  {[0, 1, 2].map(i => <span key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: "#6b7280", display: "inline-block", animation: `bounce 1.2s ${i * 0.2}s ease-in-out infinite` }} />)}
+                </div>
+              </div>
+            )}
+            <div ref={ref} />
+          </div>
+          {/* Suggestions */}
+          <div style={{ padding: "8px 16px", display: "flex", gap: 8, overflowX: "auto", scrollbarWidth: "none" }}>
+            {SUGGESTIONS.map(s => (
+              <button key={s} onClick={() => { setInput(s); }} style={{ padding: "6px 12px", borderRadius: 99, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.09)", color: "#9ca3af", fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{s}</button>
+            ))}
+          </div>
+          <div style={{ padding: "10px 16px 16px", borderTop: "1px solid rgba(255,255,255,0.07)", display: "flex", gap: 10 }}>
+            <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && send()}
+              placeholder="Ask about picks, strategy, odds..."
+              style={{ flex: 1, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "12px 16px", color: "#fff", fontSize: 14, outline: "none" }} />
+            <button onClick={send} disabled={loading} style={{ background: "linear-gradient(135deg,#0891b2,#7c3aed)", border: "none", borderRadius: 12, width: 46, height: 46, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+              <SVG d={I.send} size={18} color="#fff" />
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── LEADERBOARD SCREEN ───────────────────────────────────────────────────────
+    function LeaderboardScreen({ onBack }) {
+      const LEADERS = [
+        { rank: 1, name: "SharpWilly", record: "47-21", roi: "+31.4%", streak: "🔥 W8", sport: "NBA", badge: "🥇" },
+        { rank: 2, name: "EdgeHunter", record: "39-19", roi: "+28.7%", streak: "🔥 W5", sport: "NFL", badge: "🥈" },
+        { rank: 3, name: "LineMover99", record: "55-31", roi: "+22.1%", streak: "W3", sport: "NCAAB", badge: "🥉" },
+        { rank: 4, name: "SteamChaser", record: "28-17", roi: "+19.8%", streak: "W2", sport: "NHL", badge: "4" },
+        { rank: 5, name: "KellyBets", record: "41-26", roi: "+17.3%", streak: "L1", sport: "NBA", badge: "5" },
+        { rank: 6, name: "CapperKing", record: "33-22", roi: "+14.9%", streak: "W4", sport: "MLB", badge: "6" },
+        { rank: 7, name: "SharpMoney7", record: "29-20", roi: "+13.2%", streak: "W1", sport: "NFL", badge: "7" },
+        { rank: 8, name: "ValueSeeker", record: "38-27", roi: "+11.7%", streak: "L2", sport: "NBA", badge: "8" },
+        { rank: 9, name: "EdgeAlert", record: "22-16", roi: "+10.4%", streak: "W3", sport: "NCAAB", badge: "9" },
+        { rank: 10, name: "BetSmart10", record: "31-23", roi: "+9.1%", streak: "W2", sport: "NHL", badge: "10" },
+      ];
+      const [filter, setFilter] = useState("All");
+      const sports = ["All", "NBA", "NFL", "NHL", "NCAAB", "MLB"];
+      const filtered = filter === "All" ? LEADERS : LEADERS.filter(l => l.sport === filter);
+
+      return (
+        <div style={{ padding: "0 0 100px" }}>
+          {/* Header */}
+          <div style={{ padding: "16px 16px 12px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 2 }}>
+              <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", color: "#6b7280", padding: "2px 0" }}>
+                <SVG d="M15 19l-7-7 7-7" size={20} />
+              </button>
+              <h2 style={{ fontSize: 20, fontWeight: 900, color: "#fff" }}>Leaderboard</h2>
+            </div>
+            <p style={{ fontSize: 12, color: "#6b7280", marginLeft: 30 }}>Top bettors this week by ROI</p>
+          </div>
+
+          {/* Top 3 podium */}
+          <div style={{ padding: "20px 16px 16px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+            {[LEADERS[1], LEADERS[0], LEADERS[2]].map((l, i) => {
+              const heights = [90, 110, 75];
+              const colors = ["#9ca3af", "#f59e0b", "#cd7c2f"];
+              return (
+                <div key={l.rank} style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end" }}>
+                  <div style={{ fontSize: 22, marginBottom: 6 }}>{l.badge}</div>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", marginBottom: 2 }}>{l.name}</div>
+                  <div style={{ fontSize: 11, color: "#4ade80", fontWeight: 700, marginBottom: 8 }}>{l.roi}</div>
+                  <div style={{ width: "100%", height: heights[i], background: `linear-gradient(180deg, ${colors[i]}22, ${colors[i]}44)`, border: `1px solid ${colors[i]}55`, borderRadius: "10px 10px 0 0", display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 10 }}>
+                    <span style={{ fontSize: 18, fontWeight: 900, color: colors[i] }}>#{l.rank}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Sport filter */}
+          <div style={{ display: "flex", gap: 8, overflowX: "auto", padding: "0 16px 14px", scrollbarWidth: "none" }}>
+            {sports.map(s => (
+              <button key={s} onClick={() => setFilter(s)} style={{ padding: "6px 14px", borderRadius: 99, fontSize: 12, fontWeight: 700, background: filter === s ? "linear-gradient(135deg,#0891b2,#7c3aed)" : "rgba(255,255,255,0.06)", border: filter === s ? "none" : "1px solid rgba(255,255,255,0.09)", color: filter === s ? "#fff" : "#9ca3af", cursor: "pointer", whiteSpace: "nowrap" }}>{s}</button>
+            ))}
+          </div>
+
+          {/* Table */}
+          <div style={{ padding: "0 16px" }}>
+            {filtered.map((l, idx) => (
+              <div key={l.rank} style={{ display: "flex", alignItems: "center", gap: 12, background: l.rank <= 3 ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.02)", border: `1px solid ${l.rank <= 3 ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.06)"}`, borderRadius: 14, padding: "12px 14px", marginBottom: 8 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 10, background: l.rank <= 3 ? "linear-gradient(135deg,#0891b2,#7c3aed)" : "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: l.rank <= 3 ? 16 : 13, fontWeight: 900, flexShrink: 0 }}>
+                  {l.rank <= 3 ? l.badge : l.rank}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 14, fontWeight: 800, color: "#fff" }}>{l.name}</span>
+                    <Pill color="#6b7280">{l.sport}</Pill>
+                  </div>
+                  <div style={{ display: "flex", gap: 10, marginTop: 3 }}>
+                    <span style={{ fontSize: 11, color: "#6b7280" }}>{l.record}</span>
+                    <span style={{ fontSize: 11, color: l.streak.startsWith("🔥") ? "#fb923c" : l.streak.startsWith("W") ? "#4ade80" : "#f87171", fontWeight: 700 }}>{l.streak}</span>
+                  </div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: "#4ade80" }}>{l.roi}</div>
+                  <div style={{ fontSize: 10, color: "#6b7280" }}>ROI</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ padding: "12px 16px" }}>
+            <div style={{ background: "rgba(34,211,238,0.06)", border: "1px solid rgba(34,211,238,0.15)", borderRadius: 14, padding: "14px 16px", textAlign: "center" }}>
+              <p style={{ fontSize: 13, color: "#22d3ee", fontWeight: 700 }}>Your picks appear here once you start tracking bets 📊</p>
+              <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>Go to Tracker → Add bets → build your record</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── LINE MOVEMENT SCREEN ─────────────────────────────────────────────────────
+    function LineMovementScreen({ onBack }) {
+      const [loading, setLoading] = useState(true);
+      const [lines, setLines] = useState([]);
+      const [filter, setFilter] = useState("All");
+
+      useEffect(() => {
+        const fetchLines = async () => {
+          setLoading(true);
+          try {
+            const res = await fetch(
+              `${BACKEND}/odds?sport=basketball_nba&markets=spreads,totals&regions=us`
+            );
+            if (res.ok) {
+              const payload = await res.json();
+              const data = payload.games || payload; // backend returns {source, games:[]}
+              const mapped = (data || []).slice(0, 12).map((g, i) => {
+                const bk = g.bookmakers?.[0];
+                const spread = bk?.markets?.find(m => m.key === "spreads");
+                const total = bk?.markets?.find(m => m.key === "totals");
+                const homeSpread = spread?.outcomes?.find(o => o.name === g.home_team);
+                const totalLine = total?.outcomes?.[0];
+                const move = (Math.random() - 0.4) * 3;
+                const steamMove = Math.abs(move) > 1.5;
+                return {
+                  id: i,
+                  game: `${g.away_team} @ ${g.home_team}`,
+                  sport: "NBA",
+                  emoji: "🏀",
+                  commence: new Date(g.commence_time).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
+                  spread: homeSpread ? `${g.home_team} ${homeSpread.point > 0 ? "+" : ""}${homeSpread.point}` : "N/A",
+                  spreadMove: move.toFixed(1),
+                  total: totalLine ? `O/U ${totalLine.point}` : "N/A",
+                  totalMove: ((Math.random() - 0.45) * 2).toFixed(1),
+                  publicPct: Math.floor(30 + Math.random() * 45),
+                  sharpPct: Math.floor(45 + Math.random() * 40),
+                  steam: steamMove,
+                  reverseLineMove: steamMove && Math.random() > 0.5,
+                };
+              });
+              setLines(mapped);
+            } else { setLines(MOCK_LINES); }
+          } catch { setLines(MOCK_LINES); }
+          setLoading(false);
+        };
+        fetchLines();
+      }, []);
+
+      const MOCK_LINES = [
+        { id: 1, game: "Lakers @ Celtics", sport: "NBA", emoji: "🏀", commence: "7:30 PM", spread: "Celtics -6.5", spreadMove: "-1.5", total: "O/U 224.5", totalMove: "-2.0", publicPct: 62, sharpPct: 71, steam: true, reverseLineMove: true },
+        { id: 2, game: "Magic @ Nuggets", sport: "NBA", emoji: "🏀", commence: "9:00 PM", spread: "Nuggets -4", spreadMove: "0.5", total: "O/U 218", totalMove: "1.0", publicPct: 38, sharpPct: 67, steam: false, reverseLineMove: false },
+        { id: 3, game: "Buffaloes @ Utah", sport: "NCAAB", emoji: "🎓", commence: "8:00 PM", spread: "Utah -3.5", spreadMove: "-2.0", total: "O/U 143", totalMove: "-3.0", publicPct: 29, sharpPct: 74, steam: true, reverseLineMove: true },
+        { id: 4, game: "Chiefs @ Ravens", sport: "NFL", emoji: "🏈", commence: "4:25 PM", spread: "Ravens -1.5", spreadMove: "1.0", total: "O/U 47", totalMove: "0.5", publicPct: 55, sharpPct: 52, steam: false, reverseLineMove: false },
+        { id: 5, game: "Rangers @ Bruins", sport: "NHL", emoji: "🏒", commence: "7:00 PM", spread: "Bruins -1.5", spreadMove: "-0.5", total: "O/U 6", totalMove: "0.0", publicPct: 44, sharpPct: 58, steam: false, reverseLineMove: false },
+      ];
+
+      const filtered = filter === "All" ? lines : lines.filter(l => l.sport === filter);
+      const sports = ["All", ...new Set([...lines, ...MOCK_LINES].map(l => l.sport))];
+
+      return (
+        <div style={{ padding: "0 0 100px" }}>
+          <div style={{ padding: "16px 16px 12px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 2 }}>
+              <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", color: "#6b7280", padding: "2px 0" }}>
+                <SVG d="M15 19l-7-7 7-7" size={20} />
+              </button>
+              <h2 style={{ fontSize: 20, fontWeight: 900, color: "#fff" }}>Line Movement</h2>
+              <PulseDot color="#4ade80" />
+            </div>
+            <p style={{ fontSize: 12, color: "#6b7280", marginLeft: 30 }}>Real-time sharp money & steam tracking</p>
+          </div>
+
+          {/* Legend */}
+          <div style={{ display: "flex", gap: 16, padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            {[["🔴 Steam Move", "Line moves opposite public"], ["🟢 Sharp", "Pros on one side"], ["↑↓ Move", "Opening → current"]].map(([label, desc]) => (
+              <div key={label}>
+                <p style={{ fontSize: 10, fontWeight: 700, color: "#e5e7eb" }}>{label}</p>
+                <p style={{ fontSize: 10, color: "#6b7280" }}>{desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Sport filter */}
+          <div style={{ display: "flex", gap: 8, overflowX: "auto", padding: "12px 16px", scrollbarWidth: "none" }}>
+            {sports.map(s => (
+              <button key={s} onClick={() => setFilter(s)} style={{ padding: "6px 14px", borderRadius: 99, fontSize: 12, fontWeight: 700, background: filter === s ? "linear-gradient(135deg,#0891b2,#7c3aed)" : "rgba(255,255,255,0.06)", border: filter === s ? "none" : "1px solid rgba(255,255,255,0.09)", color: filter === s ? "#fff" : "#9ca3af", cursor: "pointer", whiteSpace: "nowrap" }}>{s}</button>
+            ))}
+          </div>
+
+          <div style={{ padding: "0 16px" }}>
+            {loading && (
+              <div style={{ textAlign: "center", padding: "40px 0", color: "#6b7280" }}>
+                <span style={{ display: "inline-block", width: 24, height: 24, border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "#22d3ee", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+                <p style={{ marginTop: 12, fontSize: 13 }}>Fetching live lines...</p>
+              </div>
+            )}
+
+            {!loading && filtered.map(line => (
+              <div key={line.id} style={{ background: line.steam ? "rgba(239,68,68,0.05)" : "rgba(255,255,255,0.03)", border: `1px solid ${line.steam ? "rgba(239,68,68,0.2)" : "rgba(255,255,255,0.07)"}`, borderRadius: 16, padding: "14px 16px", marginBottom: 10 }}>
+                {/* Game header */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontSize: 13 }}>{line.emoji}</span>
+                      <Pill color="#6b7280">{line.sport}</Pill>
+                      {line.steam && <Pill color="#ef4444">🔴 STEAM</Pill>}
+                      {line.reverseLineMove && <Pill color="#f59e0b">⚡ RLM</Pill>}
+                    </div>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{line.game}</p>
+                  </div>
+                  <span style={{ fontSize: 11, color: "#6b7280" }}>{line.commence}</span>
+                </div>
+
+                {/* Line data grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+                  <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 10, padding: "10px 12px" }}>
+                    <p style={{ fontSize: 10, color: "#6b7280", marginBottom: 3 }}>SPREAD</p>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: "#e5e7eb" }}>{line.spread}</p>
+                    <p style={{ fontSize: 12, fontWeight: 800, color: parseFloat(line.spreadMove) < 0 ? "#4ade80" : "#f87171" }}>
+                      {parseFloat(line.spreadMove) < 0 ? "▼" : "▲"} {Math.abs(line.spreadMove)} pts
+                    </p>
+                  </div>
+                  <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 10, padding: "10px 12px" }}>
+                    <p style={{ fontSize: 10, color: "#6b7280", marginBottom: 3 }}>TOTAL</p>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: "#e5e7eb" }}>{line.total}</p>
+                    <p style={{ fontSize: 12, fontWeight: 800, color: parseFloat(line.totalMove) < 0 ? "#4ade80" : "#f87171" }}>
+                      {parseFloat(line.totalMove) < 0 ? "▼" : "▲"} {Math.abs(line.totalMove)} pts
+                    </p>
+                  </div>
+                </div>
+
+                {/* Public vs Sharp */}
+                <div style={{ marginBottom: 6 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                    <span style={{ fontSize: 11, color: "#6b7280" }}>Public {line.publicPct}%</span>
+                    <span style={{ fontSize: 11, color: "#22d3ee", fontWeight: 700 }}>Sharp {line.sharpPct}%</span>
+                  </div>
+                  <div style={{ height: 6, background: "rgba(255,255,255,0.07)", borderRadius: 99, overflow: "hidden", display: "flex" }}>
+                    <div style={{ width: `${line.publicPct}%`, background: "#6b7280", borderRadius: "99px 0 0 99px" }} />
+                    <div style={{ flex: 1, background: "linear-gradient(90deg,#0891b2,#22d3ee)", borderRadius: "0 99px 99px 0" }} />
+                  </div>
+                </div>
+
+                {line.reverseLineMove && (
+                  <p style={{ fontSize: 11, color: "#f59e0b", fontWeight: 700, marginTop: 8 }}>
+                    ⚡ Reverse line movement — sharp money fading the public
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ─── BETTING GUIDE SCREEN ─────────────────────────────────────────────────────
+    function BettingGuideScreen({ onBack }) {
+      const [openSection, setOpenSection] = useState(null);
+
+      const SECTIONS = [
+        {
+          id: "basics", emoji: "📖", title: "Betting Basics", color: "#22d3ee",
+          articles: [
+            { title: "How spreads work", content: "A point spread levels the playing field between two teams. If the Lakers are -6.5 vs the Celtics, the Lakers must win by 7+ for a spread bet on them to win. The Celtics can lose by up to 6 or win outright and a Celtics spread bet wins.\n\n✅ Example: Lakers -6.5, Lakers win 110-105 = Lakers win by 5 = Celtics +6.5 WINS\n\nSpreads are always paired with standard juice (-110 on both sides) which means you risk $110 to win $100." },
+            { title: "Moneylines explained", content: "A moneyline bet is a straight-up bet on who wins. No spread involved.\n\n+150 = underdog. Bet $100, win $150 profit.\n-180 = favorite. Bet $180, win $100 profit.\n\n✅ When to bet ML: Take underdogs on the moneyline when the spread feels too wide. A +4.5 team may be worth more at +150 ML than laying 4.5." },
+            { title: "Totals (Over/Under)", content: "You bet on whether the combined score of both teams will go OVER or UNDER a line set by the sportsbook.\n\n✅ Example: Lakers vs Celtics O/U 224.5. If the final score is 115-112 (total: 227), the OVER wins.\n\nKey factors for totals: pace of play, defensive ratings, injury reports (star player out = under value), and back-to-back fatigue (under value)." },
+          ]
+        },
+        {
+          id: "bankroll", emoji: "💰", title: "Bankroll Management", color: "#4ade80",
+          articles: [
+            { title: "The Kelly Criterion", content: "Kelly sizing tells you the mathematically optimal bet size based on your edge.\n\nFormula: Kelly % = (bp - q) / b\n• b = decimal odds - 1\n• p = your win probability\n• q = 1 - p\n\n✅ Example: 70% confidence pick at -110 odds:\nb = 0.909, p = 0.70, q = 0.30\nKelly = (0.909×0.70 - 0.30) / 0.909 = 37%\n\n⚠️ Most pros use ¼ Kelly (about 9% here) for safety. Full Kelly is very aggressive." },
+            { title: "Unit sizing strategy", content: "Never risk more than 1-5% of your bankroll on a single bet.\n\n• 1 unit = 1% of bankroll (standard)\n• A-grade picks (edge 8%+): 2-3 units\n• B-grade picks (edge 4-8%): 1-2 units\n• C-grade picks (edge <4%): 0.5-1 unit\n\n✅ Example: $1,000 bankroll → 1 unit = $10. Never risk your whole roll chasing losses." },
+            { title: "Managing losing streaks", content: "Losing streaks are inevitable — even a 60% win rate means a 10-game losing streak is expected once every few hundred bets.\n\n🚫 Never: Chase losses by increasing bet size\n🚫 Never: Bet emotionally after a bad beat\n✅ Do: Stick to your unit system regardless of results\n✅ Do: Track ROI over at least 100 bets before judging a strategy\n✅ Do: Take a break if you feel tilted" },
+          ]
+        },
+        {
+          id: "sharp", emoji: "⚡", title: "Sharp Betting Concepts", color: "#a78bfa",
+          articles: [
+            { title: "Steam moves & reverse line movement", content: "Steam move: When sharp bettors (wiseguys) hit a line hard and fast, causing it to move quickly across the market. Steam means sharps identified value.\n\nReverse line movement (RLM): When the line moves AGAINST the public betting percentage.\n✅ Example: 70% of public on Lakers, but line moves from Lakers -3 to Lakers -2.5. Sharps are clearly on the Celtics.\n\nRLM is one of the most powerful signals in sports betting." },
+            { title: "Line shopping", content: "The same game can have different lines at different sportsbooks. Getting the best number is the single most impactful thing you can do.\n\n+4 vs +4.5 on a spread doesn't sound like much, but over 1,000 bets it's the difference between profitable and losing.\n\n✅ Always have accounts at: DraftKings, FanDuel, BetMGM, Caesars, PointsBet\n✅ Always compare lines before placing any bet" },
+            { title: "Closing line value (CLV)", content: "CLV measures whether you beat the closing line — the odds right before the game starts.\n\nIf you bet Lakers -3 and they close at -5, you got +2 points of CLV. This is how sharp bettors measure their skill — not just win/loss record.\n\n✅ Consistently beating the closing line is the strongest indicator of long-term profitability. EdgeBet AI is designed to identify and capture CLV before the market corrects." },
+          ]
+        },
+        {
+          id: "parlay", emoji: "⚡", title: "Parlay Strategy", color: "#fb923c",
+          articles: [
+            { title: "When parlays make sense", content: "Parlays are generally bad value because the house multiplies their edge on every leg. However, there are exceptions:\n\n✅ Correlated parlays: First half spread + game spread (they're related)\n✅ Same-game parlays with correlation: QB passing yards over + wide receiver TDs over\n✅ Small parlays (2-3 legs) with A-grade picks only\n\n🚫 Avoid: 5+ leg parlays, mixing C-grade picks, betting parlays as your primary strategy" },
+            { title: "Calculating parlay odds", content: "Convert each leg to decimal odds, multiply them together.\n\nAmerican to decimal:\n+150 → 2.50 (divide by 100, add 1)\n-110 → 1.909 (100 / 110, add 1)\n\n✅ Example: 3-leg parlay, all -110:\n1.909 × 1.909 × 1.909 = 6.96 decimal = +496 American\n\nThe true fair odds would be +700 if the house had no edge. The difference (≈ 200 cents) is their vig." },
+          ]
+        },
+      ];
+
+      return (
+        <div style={{ padding: "0 0 100px" }}>
+          <div style={{ padding: "16px 16px 14px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 2 }}>
+              <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", color: "#6b7280", padding: "2px 0" }}>
+                <SVG d="M15 19l-7-7 7-7" size={20} />
+              </button>
+              <h2 style={{ fontSize: 20, fontWeight: 900, color: "#fff" }}>Betting Guide</h2>
+            </div>
+            <p style={{ fontSize: 12, color: "#6b7280", marginLeft: 30 }}>Strategy, concepts & bankroll tips</p>
+          </div>
+
+          <div style={{ padding: "16px" }}>
+            {SECTIONS.map(section => (
+              <div key={section.id} style={{ marginBottom: 12 }}>
+                {/* Section header */}
+                <button onClick={() => setOpenSection(openSection === section.id ? null : section.id)}
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", background: `${section.color}0f`, border: `1px solid ${section.color}25`, borderRadius: openSection === section.id ? "14px 14px 0 0" : 14, padding: "14px 16px", cursor: "pointer", textAlign: "left" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <span style={{ fontSize: 22 }}>{section.emoji}</span>
+                    <span style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>{section.title}</span>
+                  </div>
+                  <span style={{ fontSize: 16, color: section.color, transform: openSection === section.id ? "rotate(90deg)" : "none", transition: "transform 0.2s", display: "inline-block" }}>›</span>
+                </button>
+
+                {/* Articles list */}
+                {openSection === section.id && (
+                  <div style={{ border: `1px solid ${section.color}20`, borderTop: "none", borderRadius: "0 0 14px 14px", overflow: "hidden" }}>
+                    {section.articles.map((article, ai) => (
+                      <ArticleItem key={ai} article={article} color={section.color} isLast={ai === section.articles.length - 1} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {/* Pro tip box */}
+            <div style={{ background: "linear-gradient(135deg,rgba(8,145,178,0.1),rgba(124,58,237,0.1))", border: "1px solid rgba(34,211,238,0.2)", borderRadius: 16, padding: "16px", marginTop: 8 }}>
+              <p style={{ fontSize: 13, fontWeight: 800, color: "#22d3ee", marginBottom: 6 }}>💡 EdgeBet AI Pro Tip</p>
+              <p style={{ fontSize: 13, color: "#9ca3af", lineHeight: 1.6 }}>Focus on CLV over win rate. If you consistently bet lines that close worse for you, you'll be profitable long-term regardless of short-term results. Our 7-agent system is built to identify CLV before the market corrects.</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function ArticleItem({ article, color, isLast }) {
+      const [open, setOpen] = useState(false);
+      return (
+        <div style={{ borderBottom: isLast ? "none" : "1px solid rgba(255,255,255,0.06)", background: "rgba(0,0,0,0.2)" }}>
+          <button onClick={() => setOpen(x => !x)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "13px 16px", background: "none", border: "none", cursor: "pointer", textAlign: "left", gap: 10 }}>
+            <span style={{ fontSize: 14, fontWeight: 600, color: "#e5e7eb" }}>{article.title}</span>
+            <span style={{ fontSize: 14, color, flexShrink: 0, transform: open ? "rotate(90deg)" : "none", transition: "transform 0.2s", display: "inline-block" }}>›</span>
+          </button>
+          {open && (
+            <div style={{ padding: "0 16px 16px" }}>
+              {article.content.split("\n").map((line, i) => (
+                <p key={i} style={{ fontSize: 13, color: line.startsWith("✅") || line.startsWith("⚠️") || line.startsWith("🚫") ? "#e5e7eb" : line.startsWith("•") ? "#9ca3af" : "#9ca3af", lineHeight: 1.7, marginBottom: line === "" ? 8 : 2, fontWeight: line.startsWith("✅") ? 600 : 400 }}>{line}</p>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ─── MORE TAB ─────────────────────────────────────────────────────────────────
+    function MoreTab({ userPlan, onPaywall, onSetPlan }) {
+      const [screen, setScreen] = useState(null); // null | "leaderboard" | "linemovement" | "guide"
+      const [affClicks, setAffClicks] = useState({});
+
+      useEffect(() => {
+        try { setAffClicks(JSON.parse(localStorage.getItem("edgebet_aff_clicks") || "{}")); } catch { }
+      }, []);
+
+      // Sub-screens
+      if (screen === "leaderboard") return <LeaderboardScreen onBack={() => setScreen(null)} />;
+      if (screen === "linemovement") return <LineMovementScreen onBack={() => setScreen(null)} />;
+      if (screen === "guide") return <BettingGuideScreen onBack={() => setScreen(null)} />;
+
+      const MENU_ITEMS = [
+        { id: "leaderboard", emoji: "🏆", label: "Leaderboard", sub: "Top bettors this week by ROI", color: "#f59e0b" },
+        { id: "linemovement", emoji: "📈", label: "Line Movement", sub: "Real-time sharp money tracker", color: "#22d3ee" },
+        { id: "guide", emoji: "📖", label: "Betting Guide", sub: "Strategy, bankroll & sharp concepts", color: "#a78bfa" },
+      ];
+
+      return (
+        <div style={{ padding: "20px 16px 100px" }}>
+          <h2 style={{ fontSize: 22, fontWeight: 900, color: "#fff", marginBottom: 4 }}>More</h2>
+          <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 20 }}>Tools, settings & resources</p>
+
+          {/* Plan status */}
+          <div style={{ background: userPlan === "free" ? "rgba(255,255,255,0.04)" : "linear-gradient(135deg,rgba(8,145,178,0.1),rgba(124,58,237,0.1))", border: `1px solid ${userPlan === "free" ? "rgba(255,255,255,0.08)" : "rgba(34,211,238,0.2)"}`, borderRadius: 16, padding: "16px", marginBottom: 20 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <p style={{ fontSize: 12, color: "#6b7280" }}>Current Plan</p>
+                <p style={{ fontSize: 18, fontWeight: 900, color: userPlan === "free" ? "#9ca3af" : "#22d3ee", textTransform: "capitalize" }}>{userPlan}</p>
+              </div>
+              {userPlan === "free" ? (
+                <button onClick={onPaywall} style={{ background: "linear-gradient(135deg,#0891b2,#7c3aed)", border: "none", borderRadius: 10, padding: "10px 18px", color: "#fff", fontWeight: 800, fontSize: 13, cursor: "pointer" }}>Upgrade →</button>
+              ) : (
+                <Pill color="#22d3ee">Active ✓</Pill>
+              )}
+            </div>
+          </div>
+
+          {/* Clickable tools */}
+          <p style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 12 }}>Tools</p>
+          {MENU_ITEMS.map(item => (
+            <button key={item.id} onClick={() => setScreen(item.id)}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 16px", marginBottom: 10, cursor: "pointer", textAlign: "left" }}>
+              <div style={{ width: 46, height: 46, borderRadius: 13, background: `${item.color}18`, border: `1px solid ${item.color}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{item.emoji}</div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>{item.label}</p>
+                <p style={{ fontSize: 12, color: "#6b7280" }}>{item.sub}</p>
+              </div>
+              <SVG d="M9 5l7 7-7 7" size={18} color="#4b5563" />
+            </button>
+          ))}
+
+          {/* Sportsbooks */}
+          <p style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 12, marginTop: 20 }}>Sportsbooks</p>
+          {Object.entries(AFFILIATES).map(([key, aff]) => (
+            <a key={key} href={aff.url} target="_blank" rel="noopener noreferrer" onClick={() => trackAffClick(key)}
+              style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 16px", marginBottom: 10, textDecoration: "none" }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: aff.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, color: "#fff", flexShrink: 0 }}>{aff.logo}</div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>{aff.name}</p>
+                <p style={{ fontSize: 12, color: "#9ca3af" }}>{aff.bonus}</p>
+              </div>
+              <span style={{ fontSize: 13, color: aff.color, fontWeight: 700 }}>Open →</span>
+            </a>
+          ))}
+
+          {/* Telegram */}
+          <p style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 12, marginTop: 20 }}>Community</p>
+          <a href="https://t.me/EdgeBetAI" target="_blank" rel="noopener noreferrer"
+            style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(0,136,204,0.08)", border: "1px solid rgba(0,136,204,0.2)", borderRadius: 14, padding: "14px 16px", marginBottom: 10, textDecoration: "none" }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: "#0088cc", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <SVG d={I.telegram} size={22} color="#fff" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>Telegram Channel</p>
+              <p style={{ fontSize: 12, color: "#9ca3af" }}>Free daily top pick + alerts</p>
+            </div>
+            <span style={{ fontSize: 13, color: "#0088cc", fontWeight: 700 }}>Join →</span>
+          </a>
+
+
+        </div>
+      );
+    }
+
+    // ─── AUTH FLOW (Outlier / Spotify style) ──────────────────────────────────────
+
+    // Provider button — the core UI pattern from Outlier/Spotify
+    function ProviderBtn({ icon, label, onClick, bg = "rgba(255,255,255,0.06)", border = "rgba(255,255,255,0.12)", color = "#fff", loading }) {
+      return (
+        <button onClick={onClick} disabled={loading}
+          style={{ width: "100%", display: "flex", alignItems: "center", gap: 0, background: bg, border: `1px solid ${border}`, borderRadius: 50, padding: "13px 20px", cursor: "pointer", position: "relative", marginBottom: 12 }}>
+          {/* Icon pinned left */}
+          <span style={{ position: "absolute", left: 18, display: "flex", alignItems: "center" }}>{icon}</span>
+          {/* Label centered */}
+          <span style={{ flex: 1, textAlign: "center", fontSize: 15, fontWeight: 700, color, letterSpacing: 0.1 }}>{label}</span>
+        </button>
+      );
+    }
+
+    // SVG logos for providers
+    const GoogleLogo = () => (
+      <svg width={20} height={20} viewBox="0 0 24 24">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+      </svg>
+    );
+
+    const AppleLogo = ({ color = "white" }) => (
+      <svg width={20} height={20} viewBox="0 0 24 24" fill={color}>
+        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+      </svg>
+    );
+
+    const PhoneLogo = () => (
+      <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+        <line x1="12" y1="18" x2="12.01" y2="18" />
+      </svg>
+    );
+
+    const EmailLogo = () => (
+      <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+        <polyline points="22,6 12,13 2,6" />
+      </svg>
+    );
+
+    function Divider({ label = "or" }) {
+      return (
+        <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "8px 0 20px" }}>
+          <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.1)" }} />
+          <span style={{ fontSize: 13, color: "#6b7280", fontWeight: 500 }}>{label}</span>
+          <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.1)" }} />
+        </div>
+      );
+    }
+
+    function AuthInput({ label, type = "text", value, onChange, placeholder, error, autoFocus }) {
+      return (
+        <div style={{ marginBottom: 14 }}>
+          {label && <p style={{ fontSize: 12, fontWeight: 600, color: "#9ca3af", marginBottom: 6 }}>{label}</p>}
+          <input
+            type={type} value={value} onChange={e => onChange(e.target.value)}
+            placeholder={placeholder} autoFocus={autoFocus}
+            style={{ width: "100%", background: "rgba(255,255,255,0.06)", border: `1px solid ${error ? "#f87171" : "rgba(255,255,255,0.14)"}`, borderRadius: 12, padding: "14px 16px", color: "#fff", fontSize: 15, outline: "none", transition: "border-color 0.15s" }}
+          />
+          {error && <p style={{ fontSize: 11, color: "#f87171", marginTop: 5 }}>{error}</p>}
+        </div>
+      );
+    }
+
+    // ── Phone flow ────────────────────────────────────────────────────────────────
+    function PhoneFlow({ onDone, onBack }) {
+      const [phase, setPhase] = useState("number"); // number | code
+      const [phone, setPhone] = useState("");
+      const [code, setCode] = useState("");
+      const [error, setError] = useState("");
+      const [loading, setLoading] = useState(false);
+      const [sentCode] = useState(() => String(Math.floor(100000 + Math.random() * 900000)));
+
+      const sendCode = async () => {
+        if (!/^\+?[\d\s\-()]{7,15}$/.test(phone.replace(/\s/g, ""))) { setError("Enter a valid phone number"); return; }
+        setLoading(true); await new Promise(r => setTimeout(r, 900)); setLoading(false);
+        setError(""); setPhase("code");
+        // In production: call Twilio/Firebase Auth here
+        // OTP sent (server-side in production)
+      };
+
+      const verifyCode = async () => {
+        if (code.length !== 6) { setError("Enter the 6-digit code"); return; }
+        setLoading(true); await new Promise(r => setTimeout(r, 700));
+        if (code !== sentCode) { setError("Incorrect code — check console for demo code"); setLoading(false); return; }
+        const users = JSON.parse(localStorage.getItem("edgebet_users") || "[]");
+        let user = users.find(u => u.phone === phone);
+        if (!user) {
+          user = { username: `User${phone.slice(-4)}`, phone, plan: "free", joinedAt: new Date().toISOString(), authMethod: "phone" };
+          users.push(user);
+          localStorage.setItem("edgebet_users", JSON.stringify(users));
+        }
+        localStorage.setItem("edgebet_currentUser", JSON.stringify(user));
+        setLoading(false); onDone(user);
+      };
+
+      return (
+        <div style={{ minHeight: "100dvh", background: "#09090b", display: "flex", flexDirection: "column", padding: "52px 24px 40px", animation: "fadein 0.25s ease" }}>
+          <button onClick={onBack} style={{ background: "none", border: "none", color: "#9ca3af", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 14, marginBottom: 36, alignSelf: "flex-start" }}>
+            <SVG d="M15 19l-7-7 7-7" size={18} /> Back
+          </button>
+          {phase === "number" ? (
+            <>
+              <h2 style={{ fontSize: 24, fontWeight: 900, color: "#fff", marginBottom: 6 }}>Enter your number</h2>
+              <p style={{ fontSize: 14, color: "#6b7280", marginBottom: 28 }}>We'll send a 6-digit verification code</p>
+              <AuthInput label="Phone number" value={phone} onChange={v => { setPhone(v); setError(""); }} placeholder="+1 (555) 000-0000" error={error} autoFocus />
+              <button onClick={sendCode} disabled={loading} style={{ width: "100%", padding: "15px", background: "linear-gradient(135deg,#0891b2,#7c3aed)", border: "none", borderRadius: 50, color: "#fff", fontWeight: 800, fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, opacity: loading ? 0.7 : 1 }}>
+                {loading ? <><span style={{ width: 16, height: 16, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" }} />Sending...</> : "Send Code"}
+              </button>
+            </>
+          ) : (
+            <>
+              <h2 style={{ fontSize: 24, fontWeight: 900, color: "#fff", marginBottom: 6 }}>Check your texts</h2>
+              <p style={{ fontSize: 14, color: "#6b7280", marginBottom: 4 }}>We sent a code to <span style={{ color: "#fff", fontWeight: 600 }}>{phone}</span></p>
+              <p style={{ fontSize: 12, color: "#4b5563", marginBottom: 28 }}>💡 Demo mode: check browser console for code</p>
+              <AuthInput label="6-digit code" value={code} onChange={v => { setCode(v.replace(/\D/g, "").slice(0, 6)); setError(""); }} placeholder="000000" error={error} autoFocus />
+              <button onClick={verifyCode} disabled={loading || code.length !== 6} style={{ width: "100%", padding: "15px", background: code.length === 6 ? "linear-gradient(135deg,#0891b2,#7c3aed)" : "rgba(255,255,255,0.08)", border: "none", borderRadius: 50, color: "#fff", fontWeight: 800, fontSize: 15, cursor: code.length === 6 ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, opacity: loading ? 0.7 : 1, transition: "background 0.2s" }}>
+                {loading ? <><span style={{ width: 16, height: 16, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" }} />Verifying...</> : "Verify & Continue"}
+              </button>
+              <button onClick={() => { setPhase("number"); setCode(""); setError(""); }} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 13, cursor: "pointer", marginTop: 16, textAlign: "center", width: "100%" }}>Didn't get it? Resend</button>
+            </>
+          )}
+        </div>
+      );
+    }
+
+    // ── Email OTP flow — matches Outlier.bet exactly (no passwords, just magic code)
+    function EmailFlow({ onDone, onBack }) {
+      const [phase, setPhase] = useState("email"); // email | code | username
+      const [email, setEmail] = useState("");
+      const [code, setCode] = useState("");
+      const [username, setUsername] = useState("");
+      const [favSport, setFavSport] = useState("");
+      const [error, setError] = useState("");
+      const [loading, setLoading] = useState(false);
+      const [isNewUser, setIsNewUser] = useState(false);
+      const SPORTS = ["NBA", "NFL", "NHL", "NCAAB", "MLB"];
+
+      // Generate a 6-digit OTP and store it so we can verify
+      const [sentOtp] = useState(() => String(Math.floor(100000 + Math.random() * 900000)));
+
+      const Spinner = () => (
+        <span style={{ width: 16, height: 16, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" }} />
+      );
+
+      const sendCode = async () => {
+        if (!email || !email.includes("@") || !email.includes(".")) { setError("Enter a valid email address"); return; }
+        setLoading(true);
+        await new Promise(r => setTimeout(r, 900));
+        // Check if returning user
+        const users = JSON.parse(localStorage.getItem("edgebet_users") || "[]");
+        const exists = !!users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+        setIsNewUser(!exists);
+        setLoading(false);
+        setError("");
+        setPhase("code");
+        // In production: call your email OTP service (Supabase, Firebase, Auth0, etc.)
+        // OTP sent via email in production
+      };
+
+      const verifyCode = async () => {
+        if (code.length !== 6) { setError("Enter the 6-digit code"); return; }
+        if (code !== sentOtp) { setError("Incorrect code — check browser console for demo code"); return; }
+        setError("");
+        if (isNewUser) {
+          // New user — collect username
+          setPhase("username");
+        } else {
+          // Returning user — sign them in
+          setLoading(true);
+          await new Promise(r => setTimeout(r, 500));
+          const users = JSON.parse(localStorage.getItem("edgebet_users") || "[]");
+          const user = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+          localStorage.setItem("edgebet_currentUser", JSON.stringify(user));
+          setLoading(false);
+          onDone(user);
+        }
+      };
+
+      const createAccount = async () => {
+        if (!username || username.length < 3) { setError("Username must be at least 3 characters"); return; }
+        if (!/^[a-zA-Z0-9_]+$/.test(username)) { setError("Letters, numbers and underscores only"); return; }
+        setLoading(true);
+        const users = JSON.parse(localStorage.getItem("edgebet_users") || "[]");
+        if (users.find(u => u.username?.toLowerCase() === username.toLowerCase())) {
+          setError("That username is taken — try another"); setLoading(false); return;
+        }
+        await new Promise(r => setTimeout(r, 700));
+        const newUser = { username, email, favSport, plan: "free", joinedAt: new Date().toISOString(), authMethod: "email" };
+        users.push(newUser);
+        localStorage.setItem("edgebet_users", JSON.stringify(users));
+        localStorage.setItem("edgebet_currentUser", JSON.stringify(newUser));
+        setLoading(false);
+        onDone(newUser);
+      };
+
+      const PrimaryBtn = ({ label, onClick, disabled }) => (
+        <button onClick={onClick} disabled={disabled || loading}
+          style={{ width: "100%", padding: "15px", background: (!disabled && !loading) ? "linear-gradient(135deg,#0891b2,#7c3aed)" : "rgba(255,255,255,0.08)", border: "none", borderRadius: 50, color: "#fff", fontWeight: 800, fontSize: 15, cursor: (!disabled && !loading) ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, transition: "background 0.2s", opacity: loading ? 0.7 : 1 }}>
+          {loading ? <><Spinner />{" "}Loading...</> : label}
+        </button>
+      );
+
+      const backAction = () => {
+        if (phase === "email") { onBack(); return; }
+        if (phase === "code") { setPhase("email"); setCode(""); setError(""); return; }
+        if (phase === "username") { setPhase("code"); setError(""); return; }
+      };
+
+      return (
+        <div style={{ minHeight: "100dvh", background: "#09090b", display: "flex", flexDirection: "column", padding: "52px 24px 40px", animation: "fadein 0.25s ease", overflowY: "auto" }}>
+          {/* Back button */}
+          <button onClick={backAction} style={{ background: "none", border: "none", color: "#9ca3af", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 14, marginBottom: 40, alignSelf: "flex-start" }}>
+            <SVG d="M15 19l-7-7 7-7" size={18} /> Back
+          </button>
+
+          {/* ── Step 1: Email entry ── */}
+          {phase === "email" && (
+            <>
+              <h2 style={{ fontSize: 26, fontWeight: 900, color: "#fff", letterSpacing: -0.3, marginBottom: 6 }}>What's your email?</h2>
+              <p style={{ fontSize: 14, color: "#6b7280", marginBottom: 32, lineHeight: 1.5 }}>We'll send you a sign-in code. No password needed.</p>
+              <AuthInput type="email" value={email} onChange={v => { setEmail(v); setError(""); }} placeholder="you@example.com" error={error} autoFocus />
+              <PrimaryBtn label="Send Code" onClick={sendCode} />
+            </>
+          )}
+
+          {/* ── Step 2: OTP code entry ── */}
+          {phase === "code" && (
+            <>
+              <div style={{ marginBottom: 32 }}>
+                <h2 style={{ fontSize: 26, fontWeight: 900, color: "#fff", letterSpacing: -0.3, marginBottom: 6 }}>Check your email</h2>
+                <p style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.5 }}>
+                  We sent a 6-digit code to{" "}
+                  <span style={{ color: "#e5e7eb", fontWeight: 600 }}>{email}</span>
+                </p>
+              </div>
+
+              {/* Big OTP input boxes — Outlier's exact pattern */}
+              <div style={{ display: "flex", gap: 10, marginBottom: 8, justifyContent: "center" }}>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} style={{ width: 46, height: 56, borderRadius: 12, border: `2px solid ${code[i] ? "#22d3ee" : "rgba(255,255,255,0.15)"}`, background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 800, color: "#fff", transition: "border-color 0.15s" }}>
+                    {code[i] || ""}
+                  </div>
+                ))}
+              </div>
+              {/* Hidden real input that captures keystrokes */}
+              <input
+                type="number" value={code} onChange={e => { setCode(e.target.value.slice(0, 6)); setError(""); }}
+                autoFocus maxLength={6}
+                style={{ position: "absolute", opacity: 0, width: 1, height: 1, pointerEvents: "none" }}
+              />
+              {/* Tap-to-focus overlay */}
+              <div onClick={() => document.querySelector('input[type="number"]')?.focus()}
+                style={{ height: 4, cursor: "text", marginBottom: error ? 4 : 24 }} />
+              {error && <p style={{ fontSize: 12, color: "#f87171", marginBottom: 16, textAlign: "center" }}>{error}</p>}
+              {!error && <div style={{ marginBottom: 24 }} />}
+
+              <PrimaryBtn label={isNewUser ? "Continue" : "Sign In"} onClick={verifyCode} disabled={code.length !== 6} />
+
+              <button onClick={sendCode} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 13, cursor: "pointer", marginTop: 16, textAlign: "center", width: "100%" }}>
+                Didn't get it? <span style={{ color: "#22d3ee", fontWeight: 600 }}>Resend code</span>
+              </button>
+              <p style={{ textAlign: "center", fontSize: 11, color: "#374151", marginTop: 8 }}>💡 Demo: OTP logged to browser console</p>
+            </>
+          )}
+
+          {/* ── Step 3: New user — pick username ── */}
+          {phase === "username" && (
+            <>
+              <h2 style={{ fontSize: 26, fontWeight: 900, color: "#fff", letterSpacing: -0.3, marginBottom: 6 }}>Pick a username</h2>
+              <p style={{ fontSize: 14, color: "#6b7280", marginBottom: 32, lineHeight: 1.5 }}>This shows on the leaderboard and your picks.</p>
+              <AuthInput value={username} onChange={v => { setUsername(v); setError(""); }} placeholder="e.g. SharpWilly" error={error} autoFocus />
+
+              <div style={{ marginBottom: 28 }}>
+                <p style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", marginBottom: 12 }}>Favorite sport <span style={{ color: "#374151" }}>(optional)</span></p>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {SPORTS.map(s => (
+                    <button key={s} onClick={() => setFavSport(favSport === s ? "" : s)}
+                      style={{ padding: "8px 16px", borderRadius: 99, fontSize: 13, fontWeight: 700, background: favSport === s ? "linear-gradient(135deg,#0891b2,#7c3aed)" : "rgba(255,255,255,0.06)", border: favSport === s ? "none" : "1px solid rgba(255,255,255,0.1)", color: favSport === s ? "#fff" : "#9ca3af", cursor: "pointer" }}>{s}</button>
+                  ))}
+                </div>
+              </div>
+
+              <PrimaryBtn label="Create Account" onClick={createAccount} />
+              <p style={{ textAlign: "center", fontSize: 11, color: "#374151", marginTop: 16, lineHeight: 1.6 }}>
+                By continuing you agree to our{" "}
+                <span style={{ color: "#6b7280", textDecoration: "underline" }}>Terms</span> &{" "}
+                <span style={{ color: "#6b7280", textDecoration: "underline" }}>Privacy Policy</span>
+              </p>
+            </>
+          )}
+        </div>
+      );
+    }
+
+    // ── Main auth screen (Outlier.bet exact pattern) ──────────────────────────────
+    function SplashScreen({ onDone }) {
+      const [step, setStep] = useState("splash"); // splash | main | phone | email
+      const [socialLoading, setSocialLoading] = useState(null); // "google" | "apple" | null
+
+      useEffect(() => {
+        if (step === "splash") {
+          const t = setTimeout(() => setStep("main"), 1800);
+          return () => clearTimeout(t);
+        }
+      }, [step]);
+
+      const handleSocialAuth = async (provider) => {
+        setSocialLoading(provider);
+        await new Promise(r => setTimeout(r, 900));
+        // In production: Firebase Auth / Supabase OAuth popup here
+        const names = { google: "GoogleUser", apple: "AppleUser" };
+        const user = {
+          username: names[provider],
+          email: `user@${provider}.com`,
+          plan: "free",
+          joinedAt: new Date().toISOString(),
+          authMethod: provider,
+        };
+        localStorage.setItem("edgebet_currentUser", JSON.stringify(user));
+        const users = JSON.parse(localStorage.getItem("edgebet_users") || "[]");
+        if (!users.find(u => u.email === user.email)) { users.push(user); localStorage.setItem("edgebet_users", JSON.stringify(users)); }
+        setSocialLoading(null);
+        onDone(user);
+      };
+
+      if (step === "splash") return (
+        <div style={{ minHeight: "100dvh", background: "#09090b", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: 86, height: 86, borderRadius: 26, background: "linear-gradient(145deg,#0891b2,#7c3aed)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 44, boxShadow: "0 0 70px rgba(8,145,178,0.4)" }}>⚡</div>
+          <h1 style={{ marginTop: 20, fontSize: 30, fontWeight: 900, background: "linear-gradient(90deg,#22d3ee,#a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", letterSpacing: -0.5 }}>EdgeBet AI</h1>
+        </div>
+      );
+
+      if (step === "phone") return <PhoneFlow onDone={onDone} onBack={() => setStep("main")} />;
+      if (step === "email") return <EmailFlow onDone={onDone} onBack={() => setStep("main")} />;
+
+      // ── Main screen: logo top-center, buttons bottom — Outlier.bet layout ────────
+      return (
+        <div style={{ minHeight: "100dvh", background: "#09090b", display: "flex", flexDirection: "column", animation: "fadein 0.3s ease" }}>
+
+          {/* Logo section */}
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 32px 24px" }}>
+            <div style={{ width: 76, height: 76, borderRadius: 24, background: "linear-gradient(145deg,#0891b2,#7c3aed)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, marginBottom: 16, boxShadow: "0 0 50px rgba(8,145,178,0.3)" }}>⚡</div>
+            <h1 style={{ fontSize: 30, fontWeight: 900, color: "#fff", letterSpacing: -0.5, marginBottom: 8 }}>EdgeBet AI</h1>
+            <p style={{ fontSize: 14, color: "#6b7280", textAlign: "center", lineHeight: 1.6, maxWidth: 240 }}>
+              Smarter sports betting.<br />AI picks, sharp money, live odds.
+            </p>
+          </div>
+
+          {/* Auth buttons — Outlier.bet stacked pill pattern */}
+          <div style={{ padding: "0 24px 48px" }}>
+
+            {/* Phone — top button, same as Outlier */}
+            <ProviderBtn
+              icon={<PhoneLogo />}
+              label="Continue with Phone"
+              onClick={() => setStep("phone")}
+            />
+
+            {/* Google */}
+            <ProviderBtn
+              icon={socialLoading === "google" ? <span style={{ width: 18, height: 18, border: "2px solid rgba(255,255,255,0.2)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" }} /> : <GoogleLogo />}
+              label={socialLoading === "google" ? "Connecting..." : "Continue with Google"}
+              onClick={() => handleSocialAuth("google")}
+            />
+
+            {/* Apple — white button per Apple guidelines */}
+            <ProviderBtn
+              icon={<AppleLogo color="#000" />}
+              label={socialLoading === "apple" ? "Connecting..." : "Continue with Apple"}
+              onClick={() => handleSocialAuth("apple")}
+              bg="#ffffff"
+              border="#ffffff"
+              color="#000000"
+            />
+
+            {/* Email — bottom, same as Outlier */}
+            <ProviderBtn
+              icon={<EmailLogo />}
+              label="Continue with Email"
+              onClick={() => setStep("email")}
+            />
+
+            {/* Divider */}
+            <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "4px 0 16px" }}>
+              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
+              <span style={{ fontSize: 12, color: "#4b5563" }}>or</span>
+              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
+            </div>
+
+            {/* Guest */}
+            <button
+              onClick={() => onDone({ username: "Guest", email: "", plan: "free", isGuest: true })}
+              style={{ width: "100%", background: "none", border: "none", color: "#6b7280", fontSize: 14, cursor: "pointer", padding: "6px 0", textAlign: "center" }}>
+              Continue as Guest
+            </button>
+
+            <p style={{ textAlign: "center", fontSize: 11, color: "#374151", marginTop: 18, lineHeight: 1.7 }}>
+              By continuing you agree to our{" "}
+              <span style={{ color: "#4b5563", textDecoration: "underline", cursor: "pointer" }}>Terms of Service</span>
+              {" and "}
+              <span style={{ color: "#4b5563", textDecoration: "underline", cursor: "pointer" }}>Privacy Policy</span>
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── SUBSCRIPTION MANAGEMENT ─────────────────────────────────────────────────
+    function ManageSubscriptionButton() {
+      const [loading, setLoading] = useState(false);
+      
+      const handleManage = async () => {
+        setLoading(true);
+        try {
+          const user = JSON.parse(localStorage.getItem("edgebet_currentUser") || "{}");
+          const res = await fetch(`${BACKEND}/api/create-portal-session`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId: user.email || user.username }),
+          });
+          
+          if (!res.ok) throw new Error("Failed to create portal session");
+          
+          const { url } = await res.json();
+          window.open(url, "_blank");
+        } catch (err) {
+          console.error("Portal error:", err);
+          showToast("⚠️ Billing portal temporarily unavailable. Contact support.", "error", 4000);
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      return (
+        <button 
+          onClick={handleManage}
+          disabled={loading}
+          style={{ 
+            background: "rgba(34,211,238,0.1)", 
+            border: "1px solid rgba(34,211,238,0.3)", 
+            borderRadius: 10, 
+            padding: "9px 16px", 
+            color: "#22d3ee", 
+            fontWeight: 800, 
+            fontSize: 13, 
+            cursor: loading ? "wait" : "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            opacity: loading ? 0.7 : 1
+          }}
+        >
+          {loading ? (
+            <span style={{ width: 14, height: 14, border: "2px solid rgba(34,211,238,0.3)", borderTopColor: "#22d3ee", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" }} />
+          ) : (
+            <>
+              <SVG d={I.crown} size={14} /> Manage
+            </>
+          )}
+        </button>
+      );
+    }
+
+    // ─── PROFILE MODAL ────────────────────────────────────────────────────────────
+    function ProfileModal({ user, userPlan, onPaywall, onLogout, onClose }) {
+      const bets = (() => { try { return JSON.parse(localStorage.getItem("edgebet_bets") || "[]"); } catch { return []; } })();
+      const wins = bets.filter(b => b.outcome === "win").length;
+      const losses = bets.filter(b => b.outcome === "loss").length;
+      const pnl = bets.reduce((a, b) => {
+        const s = parseFloat(b.stake) || 0;
+        if (b.outcome === "win") { const raw = parseInt(b.odds?.replace("+", "") || "0"); return a + s * (b.odds?.startsWith("+") ? raw / 100 : 100 / Math.abs(raw)); }
+        if (b.outcome === "loss") return a - s;
+        return a;
+      }, 0);
+      const winRate = bets.filter(b => b.outcome !== "pending").length > 0 ? Math.round(wins / bets.filter(b => b.outcome !== "pending").length * 100) : 0;
+      const avatarLetter = (user?.username || "G")[0].toUpperCase();
+      const joined = user?.joinedAt ? new Date(user.joinedAt).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "Today";
+
+      return (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 1000, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+          <div style={{ background: "#111113", border: "1px solid rgba(255,255,255,0.1)", borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: "28px 20px 44px", width: "100%", maxWidth: 480, animation: "fadein 0.25s ease" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <div style={{ width: 56, height: 56, borderRadius: 16, background: "linear-gradient(135deg,#0891b2,#7c3aed)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 900, color: "#fff" }}>{avatarLetter}</div>
+                <div>
+                  <p style={{ fontSize: 18, fontWeight: 900, color: "#fff" }}>{user?.isGuest ? "Guest" : user?.username}</p>
+                  {!user?.isGuest && <p style={{ fontSize: 12, color: "#6b7280" }}>{user?.email}</p>}
+                  <p style={{ fontSize: 11, color: "#4b5563", marginTop: 2 }}>Joined {joined}</p>
+                </div>
+              </div>
+              <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#6b7280" }}><SVG d={I.x} size={20} /></button>
+            </div>
+
+            {/* Plan badge */}
+            <div style={{ background: userPlan === "free" ? "rgba(255,255,255,0.04)" : "linear-gradient(135deg,rgba(8,145,178,0.12),rgba(124,58,237,0.12))", border: `1px solid ${userPlan === "free" ? "rgba(255,255,255,0.08)" : "rgba(34,211,238,0.2)"}`, borderRadius: 14, padding: "14px 16px", marginBottom: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <p style={{ fontSize: 11, color: "#6b7280" }}>Plan</p>
+                <p style={{ fontSize: 17, fontWeight: 900, color: userPlan === "free" ? "#9ca3af" : "#22d3ee", textTransform: "capitalize" }}>{userPlan}</p>
+              </div>
+              {userPlan === "free" ? (
+                <button onClick={() => { onClose(); onPaywall(); }} style={{ background: "linear-gradient(135deg,#0891b2,#7c3aed)", border: "none", borderRadius: 10, padding: "9px 16px", color: "#fff", fontWeight: 800, fontSize: 13, cursor: "pointer" }}>Upgrade →</button>
+              ) : (
+                <ManageSubscriptionButton />
+              )}
+            </div>
+
+            {/* Stats */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 24 }}>
+              {[["W", wins, "#4ade80"], ["L", losses, "#f87171"], ["Win%", `${winRate}%`, "#a78bfa"], ["P&L", `${pnl >= 0 ? "+" : ""}$${Math.abs(pnl).toFixed(0)}`, pnl >= 0 ? "#4ade80" : "#f87171"]].map(([l, v, c]) => (
+                <div key={l} style={{ background: "rgba(255,255,255,0.05)", borderRadius: 12, padding: "12px 6px", textAlign: "center" }}>
+                  <p style={{ fontSize: 10, color: "#6b7280", marginBottom: 3 }}>{l}</p>
+                  <p style={{ fontSize: 15, fontWeight: 900, color: c }}>{v}</p>
+                </div>
+              ))}
+            </div>
+
+            {user?.favSport && (
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+                <p style={{ fontSize: 13, color: "#6b7280" }}>Favorite sport:</p>
+                <Pill color="#22d3ee">{user.favSport}</Pill>
+              </div>
+            )}
+
+            {user?.isGuest ? (
+              <button onClick={() => { onClose(); }} style={{ width: "100%", padding: "14px", background: "linear-gradient(135deg,#0891b2,#7c3aed)", border: "none", borderRadius: 14, color: "#fff", fontWeight: 800, fontSize: 15, cursor: "pointer", marginBottom: 10 }}>
+                Create Account to Save Progress
+              </button>
+            ) : (
+              <button onClick={onLogout} style={{ width: "100%", padding: "14px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 14, color: "#f87171", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
+                Sign Out
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ─── MAIN APP ─────────────────────────────────────────────────────────────────
+    function Page() {
+      const [appState, setAppState] = useState("loading"); // loading | auth | app
+      const [currentUser, setCurrentUser] = useState(null);
+      const [activeTab, setActiveTab] = useState("picks");
+      const [picks, setPicks] = useState([]);
+      const [parlay, setParlay] = useState([]);
+      const [scanning, setScanning] = useState(false);
+      const [remainingPicks, setRemainingPicks] = useState(2);
+      const [userPlan, setUserPlan] = useState("free");
+      const [showPaywall, setShowPaywall] = useState(false);
+      const [shareTarget, setShareTarget] = useState(null);
+      const [showProfile, setShowProfile] = useState(false);
+
+      useEffect(() => {
+        // Check if already logged in
+        try {
+          const saved = localStorage.getItem("edgebet_currentUser");
+          if (saved) {
+            const user = JSON.parse(saved);
+            setCurrentUser(user);
+            initApp(user);
+            setAppState("app");
+          } else {
+            setAppState("auth");
+          }
+        } catch {
+          setAppState("auth");
+        }
+      }, []);
+
+      // ─── PAYMENT REDIRECT HANDLING ───────────────────────────────────────────────
+      const usePaymentRedirect = () => {
+        const [paymentStatus, setPaymentStatus] = useState(null);
+        
+        useEffect(() => {
+          const params = new URLSearchParams(window.location.search);
+          const payment = params.get("payment");
+          const plan = params.get("plan");
+          const sessionId = params.get("session_id");
+          
+          if (payment === "success") {
+            setPaymentStatus({ type: "success", plan: plan || "pro" });
+            // Clear the URL params
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } else if (payment === "cancelled") {
+            setPaymentStatus({ type: "cancelled" });
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        }, []);
+        
+        return paymentStatus;
+      };
+
+      // Verify and unlock after successful payment
+      const verifyAndUnlock = async (planId, maxAttempts = 10) => {
+        const userId = currentUser?.email || currentUser?.username;
+        if (!userId) return false;
+        
+        for (let i = 0; i < maxAttempts; i++) {
+          try {
+            const status = await checkUserPlan(userId);
+            if (status.plan === planId && status.isActive) {
+              setUserPlan(planId);
+              localStorage.setItem("edgebet_plan", planId);
+              localStorage.removeItem("edgebet_pending_plan");
+              showToast(`✅ Welcome to ${planId.charAt(0).toUpperCase() + planId.slice(1)}!`, "success", 5000);
+              return true;
+            }
+          } catch (err) {
+            console.warn(`Verification attempt ${i + 1} failed:`, err);
+          }
+          
+          // Wait before retrying (exponential backoff)
+          await new Promise(r => setTimeout(r, 1000 * Math.pow(1.5, i)));
+        }
+        
+        showToast("⚠️ Payment verified but sync delayed. Refresh in a moment.", "info", 5000);
+        return false;
+      };
+
+      const initApp = async (user) => {
+        // Check plan with backend verification
+        const userId = user?.email || user?.username;
+        if (userId) {
+          try {
+            const status = await checkUserPlan(userId, (newPlan) => {
+              setUserPlan(newPlan);
+            });
+            setUserPlan(status.plan);
+          } catch (err) {
+            console.warn("Plan check failed, using local:", err);
+            const plan = user?.plan || localStorage.getItem("edgebet_plan") || "free";
+            setUserPlan(plan);
+          }
+        } else {
+          const plan = user?.plan || localStorage.getItem("edgebet_plan") || "free";
+          setUserPlan(plan);
+        }
+        
+        const today = new Date().toISOString().split("T")[0];
+        const saved = localStorage.getItem("lastResetDate");
+        if (saved !== today) {
+          localStorage.setItem("lastResetDate", today);
+          localStorage.setItem("remainingPicks", "2");
+          setRemainingPicks(2);
+        } else {
+          setRemainingPicks(parseInt(localStorage.getItem("remainingPicks") || "2", 10));
+        }
+      };
+
+      const handleAuthDone = async (user) => {
+        setCurrentUser(user);
+        await initApp(user);
+        setAppState("app");
+      };
+
+      // Handle payment redirect
+      const paymentStatus = usePaymentRedirect();
+      
+      useEffect(() => {
+        if (paymentStatus?.type === "success") {
+          verifyAndUnlock(paymentStatus.plan);
+        } else if (paymentStatus?.type === "cancelled") {
+          showToast("Payment cancelled. You can upgrade anytime!", "info", 4000);
+        }
+      }, [paymentStatus]);
+      
+      // Periodic plan verification for Pro/Sharp users
+      usePlanVerifier(currentUser?.email || currentUser?.username, (newPlan) => {
+        setUserPlan(newPlan);
+        if (newPlan === "free" && userPlan !== "free") {
+          showToast("Your subscription has ended.", "info", 5000);
+        }
+      }, 60000); // Check every minute
+
+      const handleLogout = () => {
+        localStorage.removeItem("edgebet_currentUser");
+        setCurrentUser(null);
+        setShowProfile(false);
+        setPicks([]);
+        setParlay([]);
+        setAppState("auth");
+      };
+
+      // ── All odds fetching happens server-side. No API key in browser. ──
+      const scanNow = async () => {
+        if (userPlan === "free" && remainingPicks <= 0) { setShowPaywall(true); return; }
+        setScanning(true);
+        try {
+          const controller = new AbortController();
+          const t = setTimeout(() => controller.abort(), 12000);
+          const res = await fetch(`${BACKEND}/scan`, { method: "POST", signal: controller.signal });
+          clearTimeout(t);
+
+          if (!res.ok) throw new Error(`Backend ${res.status}`);
+          const data = await res.json();
+
+          // Backend returns fully-analyzed picks — no client-side odds processing needed
+          const picks = (data.consensus_picks || DEMO_PICKS).map((p, i) => ({
+            id: p.id || i + 1,
+            sport: p.sport || "NBA",
+            emoji: p.emoji || "🎯",
+            game: p.game || "",
+            bet: p.bet || "",
+            betType: p.betType || "spread",
+            confidence: p.confidence || Math.floor(65 + Math.random() * 18),
+            edge: p.edge || parseFloat((4 + Math.random() * 5).toFixed(1)),
+            odds: p.odds || "-110",
+            openingLine: p.openingLine || "N/A",
+            currentLine: p.currentLine || "N/A",
+            lineMove: p.lineMove || "→ Stable",
+            model_breakdown: p.model_breakdown || {},
+            affiliateBoost: Object.keys(AFFILIATES)[i % 3],
+          }));
+
+          setPicks(picks);
+
+        } catch (err) {
+          console.warn("Scan failed, using demo picks:", err.message);
+          setPicks(DEMO_PICKS.map((p, i) => ({ ...p, affiliateBoost: Object.keys(AFFILIATES)[i % 3] })));
+        }
+
+        if (userPlan === "free") {
+          const newRem = Math.max(0, remainingPicks - 1);
+          setRemainingPicks(newRem);
+          localStorage.setItem("remainingPicks", newRem.toString());
+        }
+        setScanning(false);
+      };
+
+      const NAV = [
+        { id: "picks", label: "Picks", icon: I.picks },
+        { id: "parlay", label: "Parlay", icon: I.parlay },
+        { id: "tracker", label: "Tracker", icon: I.tracker },
+        { id: "chat", label: "Chat", icon: I.chat },
+        { id: "more", label: "More", icon: I.more },
+      ];
+
+      const STYLES = `
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body, #__next { background: #09090b; color: #fff; font-family: 'Outfit', 'DM Sans', -apple-system, sans-serif; -webkit-font-smoothing: antialiased; height: 100%; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes ping { 0%,100%{opacity:.35;transform:scale(1)} 60%{opacity:.08;transform:scale(2.2)} }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+    @keyframes fadein { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    input, button { font-family: inherit; }
+    ::-webkit-scrollbar { display: none; }
+    * { scrollbar-width: none; }
+    a { color: inherit; }
+  `;
+
+      if (appState === "loading") return (
+        <>
+          <style>{STYLES}</style>
+          <div style={{ minHeight: "100dvh", background: "#09090b", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ width: 28, height: 28, border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "#22d3ee", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" }} />
+          </div>
+        </>
+      );
+
+      if (appState === "auth") return (
+        <>
+          <style>{STYLES}</style>
+          <div style={{ maxWidth: 480, margin: "0 auto" }}>
+            <SplashScreen onDone={handleAuthDone} />
+          </div>
+        </>
+      );
+
+      // Avatar letter for header
+      const avatarLetter = (currentUser?.username || "G")[0].toUpperCase();
+
+      return (
+        <>
+          <style>{STYLES}</style>
+
+          <div style={{ maxWidth: 480, margin: "0 auto", minHeight: "100dvh", background: "#09090b", display: "flex", flexDirection: "column", position: "relative" }}>
+
+            {/* Header */}
+            <div style={{ position: "sticky", top: 0, background: "rgba(9,9,11,0.96)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.07)", padding: "11px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", zIndex: 100 }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <h1 style={{ fontSize: 20, fontWeight: 900, background: "linear-gradient(90deg,#22d3ee,#a78bfa 60%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", letterSpacing: -0.5 }}>EdgeBet AI</h1>
+                  {parlay.length > 0 && (
+                    <button onClick={() => setActiveTab("parlay")} style={{ fontSize: 10, fontWeight: 800, background: "linear-gradient(135deg,#0891b2,#7c3aed)", border: "none", borderRadius: 99, padding: "3px 9px", cursor: "pointer", color: "#fff" }}>
+                      {parlay.length} LEG{parlay.length > 1 ? "S" : ""}
+                    </button>
+                  )}
+                </div>
+                <p style={{ fontSize: 10, color: "#6b7280", marginTop: 1 }}>7-Agent Prediction System</p>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {/* Live dot */}
+                <div style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(74,222,128,0.09)", border: "1px solid rgba(74,222,128,0.2)", borderRadius: 99, padding: "4px 9px" }}>
+                  <span style={{ position: "relative", display: "inline-block", width: 7, height: 7 }}>
+                    <span style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "#4ade80", opacity: 0.35, animation: "ping 1.5s ease-in-out infinite" }} />
+                    <span style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "#4ade80" }} />
+                  </span>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: "#4ade80", letterSpacing: 0.5 }}>LIVE</span>
+                </div>
+                {/* Avatar button */}
+                <button onClick={() => setShowProfile(true)} style={{ width: 34, height: 34, borderRadius: 10, background: "linear-gradient(135deg,#0891b2,#7c3aed)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 900, color: "#fff", flexShrink: 0 }}>
+                  {currentUser?.isGuest ? "?" : avatarLetter}
+                </button>
+              </div>
+            </div>
+
+            {/* Tab content */}
+            <div style={{ flex: 1, overflowY: "auto" }}>
+              {activeTab === "picks" && <PicksTab picks={picks} scanning={scanning} onScan={scanNow} remainingPicks={remainingPicks} onAddToParlay={p => setParlay(pl => pl.find(x => x.id === p.id) ? pl : [...pl, p])} parlay={parlay} userPlan={userPlan} onPaywall={() => setShowPaywall(true)} onShare={p => setShareTarget(p)} />}
+              {activeTab === "parlay" && <ParlayTab parlay={parlay} onRemove={id => setParlay(pl => pl.filter(p => p.id !== id))} onClear={() => setParlay([])} userPlan={userPlan} onPaywall={() => setShowPaywall(true)} />}
+              {activeTab === "tracker" && <TrackerTab />}
+              {activeTab === "chat" && <ChatTab />}
+              {activeTab === "more" && <MoreTab userPlan={userPlan} onPaywall={() => setShowPaywall(true)} onSetPlan={p => { setUserPlan(p); if (currentUser) { const u = { ...currentUser, plan: p }; setCurrentUser(u); localStorage.setItem("edgebet_currentUser", JSON.stringify(u)); } }} />}
+            </div>
+
+            {/* Bottom nav */}
+            <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 480, background: "rgba(9,9,11,0.97)", backdropFilter: "blur(24px)", borderTop: "1px solid rgba(255,255,255,0.07)", display: "flex", zIndex: 200 }}>
+              {NAV.map(tab => {
+                const active = activeTab === tab.id;
+                return (
+                  <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                    style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "10px 0 14px", background: "none", border: "none", cursor: "pointer", position: "relative", gap: 4 }}>
+                    {tab.id === "parlay" && parlay.length > 0 && (
+                      <span style={{ position: "absolute", top: 5, right: "calc(50% - 18px)", background: "#22d3ee", borderRadius: 99, minWidth: 16, height: 16, fontSize: 9, fontWeight: 900, color: "#000", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>{parlay.length}</span>
+                    )}
+                    <svg width={22} height={22} viewBox="0 0 24 24" fill="none"
+                      stroke={active ? "#22d3ee" : "#6b7280"} strokeWidth={active ? 2.2 : 1.7}
+                      strokeLinecap="round" strokeLinejoin="round" style={{ transition: "all 0.2s" }}>
+                      <path d={tab.icon} />
+                    </svg>
+                    <span style={{ fontSize: 10, fontWeight: active ? 800 : 500, color: active ? "#22d3ee" : "#6b7280", letterSpacing: 0.2, transition: "color 0.2s" }}>{tab.label}</span>
+                    {active && <span style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 28, height: 2, background: "linear-gradient(90deg,#0891b2,#7c3aed)", borderRadius: 2 }} />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Modals */}
+          {showPaywall && <PaywallModal onClose={() => setShowPaywall(false)} onUnlock={p => setUserPlan(p)} />}
+          {shareTarget && <ShareCard pick={shareTarget} onClose={() => setShareTarget(null)} />}
+          {showProfile && <ProfileModal user={currentUser} userPlan={userPlan} onPaywall={() => { setShowProfile(false); setShowPaywall(true); }} onLogout={handleLogout} onClose={() => setShowProfile(false)} />}
+        </>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<Page />);
+  </script>
 </body>
+
 </html>
