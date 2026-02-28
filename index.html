@@ -294,24 +294,90 @@
     <!-- CHAT PAGE -->
     <div id="chat-page" class="content">
       <div class="page-title">AI Chat</div>
-      <div class="placeholder-card">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-        <div>Chat with EdgeBet AI</div>
-        <div class="coming-soon">Ask questions about picks, strategy, and more</div>
+      <div id="chat-container" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 16px; margin-bottom: 16px; height: 400px; overflow-y: auto;">
+        <div class="chat-message" style="margin-bottom: 12px;">
+          <div style="font-size: 12px; color: #22d3ee; margin-bottom: 4px;">EdgeBet AI</div>
+          <div style="font-size: 14px; color: #fff; background: rgba(34,211,238,0.1); padding: 12px; border-radius: 12px; display: inline-block; max-width: 80%;">Hey! I'm EdgeBet AI. Ask me about picks, betting strategy, or how the 7-agent system works!</div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <input type="text" id="chat-input" placeholder="Ask me anything..." style="flex: 1; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; font-size: 14px;">
+        <button onclick="sendChat()" style="padding: 12px 20px; background: linear-gradient(135deg, #0891b2, #7c3aed); border: none; border-radius: 12px; color: #fff; font-weight: 700; cursor: pointer;">Send</button>
+      </div>
+      <div style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px;">
+        <button onclick="quickChat('How does the 7-agent system work?')" style="padding: 6px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 99px; color: #9ca3af; font-size: 12px; cursor: pointer;">How does it work?</button>
+        <button onclick="quickChat('What is edge betting?')" style="padding: 6px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 99px; color: #9ca3af; font-size: 12px; cursor: pointer;">What is edge?</button>
+        <button onclick="quickChat('Bankroll tips')" style="padding: 6px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 99px; color: #9ca3af; font-size: 12px; cursor: pointer;">Bankroll tips</button>
+        <button onclick="quickChat('Sharp money vs public')" style="padding: 6px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 99px; color: #9ca3af; font-size: 12px; cursor: pointer;">Sharp vs Public</button>
       </div>
     </div>
 
     <!-- MORE PAGE -->
     <div id="more-page" class="content">
-      <div class="page-title">More</div>
-      <div class="placeholder-card" style="margin-bottom: 12px;">
-        <div style="font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px;">Current Plan</div>
-        <div style="font-size: 24px; font-weight: 900; color: #22d3ee;">Free</div>
-        <div style="font-size: 12px; color: #9ca3af; margin-top: 4px;">2 picks per day</div>
+      <div class="page-title">Account</div>
+      
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 20px; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div>
+            <div style="font-size: 14px; color: #9ca3af; margin-bottom: 4px;">Current Plan</div>
+            <div style="font-size: 28px; font-weight: 900; color: #22d3ee;">Free</div>
+          </div>
+          <div style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #22d3ee; padding: 8px 16px; border-radius: 99px; font-size: 12px; font-weight: 700;">2 picks/day</div>
+        </div>
+        <div style="font-size: 12px; color: #6b7280;">Upgrade for unlimited picks and full analysis</div>
       </div>
-      <button class="scan-btn" style="margin-top: 20px;">
-        Upgrade to Pro
-      </button>
+
+      <div style="font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 12px; margin-top: 24px;">Upgrade Options</div>
+      
+      <!-- Pro Plan -->
+      <div style="background: rgba(34,211,238,0.05); border: 1px solid rgba(34,211,238,0.2); border-radius: 16px; padding: 20px; margin-bottom: 12px; position: relative;">
+        <div style="position: absolute; top: -10px; right: 16px; background: linear-gradient(135deg, #0891b2, #7c3aed); color: #fff; padding: 4px 12px; border-radius: 99px; font-size: 10px; font-weight: 800;">POPULAR</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div style="font-size: 18px; font-weight: 800; color: #fff;">Pro Plan</div>
+          <div style="font-size: 24px; font-weight: 900; color: #22d3ee;">$19.99<span style="font-size: 14px; color: #6b7280;">/mo</span></div>
+        </div>
+        <div style="font-size: 12px; color: #9ca3af; margin-bottom: 16px;">Unlimited picks • Full 7-agent breakdown • Live odds • Line alerts</div>
+        <a href="https://buy.stripe.com/test_14A28r6qJ9nh206gEcgYU00" target="_blank" style="display: block; text-align: center; padding: 14px; background: linear-gradient(135deg, #0891b2, #7c3aed); border-radius: 12px; color: #fff; font-weight: 800; text-decoration: none;">Upgrade to Pro →</a>
+      </div>
+
+      <!-- Sharp Plan -->
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div style="font-size: 18px; font-weight: 800; color: #fff;">Sharp Plan</div>
+          <div style="font-size: 24px; font-weight: 900; color: #a78bfa;">$49.99<span style="font-size: 14px; color: #6b7280;">/mo</span></div>
+        </div>
+        <div style="font-size: 12px; color: #9ca3af; margin-bottom: 16px;">Everything in Pro • Sharp money tracker • Discord access • Priority alerts</div>
+        <a href="https://buy.stripe.com/test_eVqfZhg1jbvp9syafOgYU01" target="_blank" style="display: block; text-align: center; padding: 14px; background: rgba(255,255,255,0.1); border-radius: 12px; color: #fff; font-weight: 800; text-decoration: none;">Go Sharp →</a>
+      </div>
+
+      <div style="font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 12px; margin-top: 24px;">Settings</div>
+      
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden;">
+        <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
+          <div style="font-size: 14px; color: #fff;">Notifications</div>
+          <div style="width: 44px; height: 24px; background: #22d3ee; border-radius: 99px; position: relative; cursor: pointer;">
+            <div style="width: 20px; height: 20px; background: #fff; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
+          </div>
+        </div>
+        <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
+          <div style="font-size: 14px; color: #fff;">Dark Mode</div>
+          <div style="width: 44px; height: 24px; background: #22d3ee; border-radius: 99px; position: relative; cursor: pointer;">
+            <div style="width: 20px; height: 20px; background: #fff; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
+          </div>
+        </div>
+        <div style="padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+          <div style="font-size: 14px; color: #fff;">Version</div>
+          <div style="font-size: 14px; color: #6b7280;">2.0.0</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 24px; text-align: center;">
+        <a href="mailto:support@edgebet.ai" style="font-size: 12px; color: #6b7280; text-decoration: none;">Contact Support</a>
+        <span style="color: #374151; margin: 0 8px;">•</span>
+        <a href="#" style="font-size: 12px; color: #6b7280; text-decoration: none;">Privacy Policy</a>
+        <span style="color: #374151; margin: 0 8px;">•</span>
+        <a href="#" style="font-size: 12px; color: #6b7280; text-decoration: none;">Terms</a>
+      </div>
     </div>
 
     <!-- NAVIGATION -->
@@ -447,8 +513,84 @@
       }
     }
 
-    // Auto-scan on load
-    window.onload = scanPicks;
+    // Chat functionality
+    const chatResponses = {
+      'how does': 'The 7-agent system analyzes: 1) Value (strips vig), 2) Line Movement, 3) Public Money %, 4) Sharp Money signals, 5) Injury reports, 6) Situational spots, 7) Consensus scoring. All for $0 AI cost!',
+      'what is edge': 'Edge is the mathematical advantage you have over the sportsbook. We find lines where the true probability is higher than the implied odds. Even a 2-3% edge compounds over hundreds of bets.',
+      'bankroll': 'Flat bet 1-2% of your bankroll per play until you have 300+ bets of data. Never chase losses. With our edge, +5-15% ROI is realistic long-term.',
+      'sharp': 'Sharp money = professional bettors. We detect when sharps are betting against the public. If 70% public is on Team A but line moves toward Team B, sharps likely like Team B.',
+      'public': 'Public money = recreational bettors. Fading the public (betting against them) works because books shade lines toward popular teams, creating value on the other side.',
+      'parlay': 'Parlays increase variance but also multiply edge. With positive edge bets, parlays actually increase expected value - but you need a bigger bankroll for the swings.',
+      'units': 'A unit = 1% of your bankroll. If you have $1000 bankroll, 1 unit = $10. Never bet more than 2-3 units on any single play.',
+      'steam': 'Steam moves = sudden, sharp line movements across multiple books. Usually indicates smart money or breaking news (injuries, lineup changes).',
+      'clv': 'Closing Line Value (CLV) = beating the final line. If you bet -3 and it closes -4, you have positive CLV. Long-term, CLV is the best predictor of profitability.',
+      'roi': 'ROI = Return on Investment. A 5% ROI means you profit $5 for every $100 wagered. Professional bettors aim for 3-7% ROI.',
+      'default': 'Hit the Scan tab to run the 7-agent analysis on today\'s games. For bankroll questions: flat bet 1-2% per play. The edge is small but real - trust the math!'
+    };
+
+    function getChatResponse(message) {
+      const lower = message.toLowerCase();
+      for (const [key, response] of Object.entries(chatResponses)) {
+        if (lower.includes(key)) return response;
+      }
+      return chatResponses.default;
+    }
+
+    function addChatMessage(text, isUser = false) {
+      const container = document.getElementById('chat-container');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'chat-message';
+      messageDiv.style.cssText = 'margin-bottom: 12px; text-align: ' + (isUser ? 'right' : 'left') + ';';
+      
+      const name = isUser ? 'You' : 'EdgeBet AI';
+      const color = isUser ? '#a78bfa' : '#22d3ee';
+      const bg = isUser ? 'rgba(167,139,250,0.1)' : 'rgba(34,211,238,0.1)';
+      
+      messageDiv.innerHTML = `
+        <div style="font-size: 12px; color: ${color}; margin-bottom: 4px;">${name}</div>
+        <div style="font-size: 14px; color: #fff; background: ${bg}; padding: 12px; border-radius: 12px; display: inline-block; max-width: 80%; text-align: left;">${text}</div>
+      `;
+      
+      container.appendChild(messageDiv);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function sendChat() {
+      const input = document.getElementById('chat-input');
+      const message = input.value.trim();
+      if (!message) return;
+      
+      addChatMessage(message, true);
+      input.value = '';
+      
+      // Simulate typing delay
+      setTimeout(() => {
+        const response = getChatResponse(message);
+        addChatMessage(response);
+      }, 500);
+    }
+
+    function quickChat(message) {
+      document.getElementById('chat-input').value = message;
+      sendChat();
+    }
+
+    // Allow Enter key to send
+    document.addEventListener('DOMContentLoaded', () => {
+      const chatInput = document.getElementById('chat-input');
+      if (chatInput) {
+        chatInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') sendChat();
+        });
+      }
+    });
+
+    // Auto-scan on load (only on picks page)
+    window.onload = () => {
+      if (document.getElementById('picks-page').classList.contains('active')) {
+        scanPicks();
+      }
+    };
   </script>
 </body>
 </html>
