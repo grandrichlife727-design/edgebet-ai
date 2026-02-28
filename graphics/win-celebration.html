@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, initial-scale=1.0">
+  <title>EdgeBet Win Graphic</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      background: #09090b; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    .container {
+      width: 1080px;
+      height: 1350px;
+      background: linear-gradient(180deg, #09090b 0%, #0f172a 100%);
+      display: flex;
+      flex-direction: column;
+      padding: 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    .container::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(74,222,128,0.1) 0%, transparent 50%);
+      animation: glow 3s ease-in-out infinite;
+    }
+    @keyframes glow {
+      0%, 100% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+    .check {
+      font-size: 200px;
+      text-align: center;
+      margin-bottom: 30px;
+      filter: drop-shadow(0 0 40px rgba(74,222,128,0.6));
+      animation: bounce 1s ease-in-out infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    .winner {
+      font-size: 80px;
+      font-weight: 900;
+      color: #4ade80;
+      text-align: center;
+      margin-bottom: 60px;
+      text-shadow: 0 0 40px rgba(74,222,128,0.5);
+    }
+    .pick-card {
+      background: rgba(74,222,128,0.08);
+      border: 2px solid rgba(74,222,128,0.3);
+      border-radius: 32px;
+      padding: 50px;
+      margin-bottom: 50px;
+      text-align: center;
+    }
+    .game {
+      font-size: 32px;
+      color: #9ca3af;
+      margin-bottom: 20px;
+    }
+    .pick {
+      font-size: 56px;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    .result {
+      font-size: 48px;
+      font-weight: 900;
+      color: #4ade80;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 30px;
+      margin-bottom: 50px;
+    }
+    .stat-box {
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      padding: 30px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 48px;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    .stat-value.green { color: #4ade80; }
+    .stat-label {
+      font-size: 24px;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .cta {
+      background: linear-gradient(135deg, #0891b2, #7c3aed);
+      padding: 32px;
+      border-radius: 20px;
+      text-align: center;
+      font-size: 32px;
+      font-weight: 800;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="check">✅</div>
+    <div class="winner">WINNER!</div>
+    
+    <div class="pick-card">
+      <div class="game">Yesterday's Pick</div>
+      <div class="pick">Magic +4.5</div>
+      <div class="result">WON BY 8</div>
+    </div>
+    
+    <div class="stats">
+      <div class="stat-box">
+        <div class="stat-value green">48</div>
+        <div class="stat-label">Wins</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value">21</div>
+        <div class="stat-label">Losses</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value green">+$1,324</div>
+        <div class="stat-label">Profit</div>
+      </div>
+    </div>
+    
+    <div class="cta">WHO CASHED WITH US? ⚡</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,1 @@
+Discord bot invite link (DM-only, no server access): https://discord.com/api/oauth2/authorize?client_id=1298765432109876543&permissions=0&scope=applications.commands%20bot

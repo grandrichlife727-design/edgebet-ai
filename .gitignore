@@ -1,0 +1,13 @@
+# EdgeBet AI
+*.log
+.DS_Store
+.env
+node_modules/
+.clawhub/
+*.mp4
+*.mov
+*.avi
+edgebet-video-output/
+edgebet-screenshots/
+edgebet-screenshots-final/
+memory/

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, initial-scale=1.0">
+  <title>EdgeBet Stats Graphic</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      background: #09090b; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    .container {
+      width: 1080px;
+      height: 1350px;
+      background: linear-gradient(180deg, #09090b 0%, #0f172a 100%);
+      display: flex;
+      flex-direction: column;
+      padding: 80px;
+      position: relative;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+    .logo {
+      font-size: 40px;
+      font-weight: 900;
+      background: linear-gradient(90deg, #22d3ee, #7c3aed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 20px;
+    }
+    .title {
+      font-size: 48px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 4px;
+    }
+    .main-stat {
+      background: linear-gradient(135deg, rgba(34,211,238,0.1), rgba(124,58,237,0.1));
+      border: 2px solid rgba(34,211,238,0.3);
+      border-radius: 40px;
+      padding: 60px;
+      text-align: center;
+      margin-bottom: 50px;
+    }
+    .main-label {
+      font-size: 32px;
+      color: #9ca3af;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .main-value {
+      font-size: 120px;
+      font-weight: 900;
+      color: #22d3ee;
+      text-shadow: 0 0 60px rgba(34,211,238,0.4);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 30px;
+      margin-bottom: 50px;
+    }
+    .stat-box {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 24px;
+      padding: 40px;
+      text-align: center;
+    }
+    .stat-box.green {
+      border-color: rgba(74,222,128,0.3);
+      background: rgba(74,222,128,0.05);
+    }
+    .stat-box.purple {
+      border-color: rgba(167,139,250,0.3);
+      background: rgba(167,139,250,0.05);
+    }
+    .stat-value {
+      font-size: 56px;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    .stat-value.green { color: #4ade80; }
+    .stat-value.purple { color: #a78bfa; }
+    .stat-label {
+      font-size: 24px;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .cta {
+      background: linear-gradient(135deg, #0891b2, #7c3aed);
+      padding: 36px;
+      border-radius: 20px;
+      text-align: center;
+      font-size: 32px;
+      font-weight: 800;
+      color: #fff;
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">⚡ EDGEBET AI</div>
+      <div class="title">THIS MONTH'S RESULTS</div>
+    </div>
+    
+    <div class="main-stat">
+      <div class="main-label">Total Profit</div>
+      <div class="main-value">+$1,247</div>
+    </div>
+    
+    <div class="grid">
+      <div class="stat-box green">
+        <div class="stat-value green">47</div>
+        <div class="stat-label">Wins</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value">21</div>
+        <div class="stat-label">Losses</div>
+      </div>
+      <div class="stat-box purple">
+        <div class="stat-value purple">69%</div>
+        <div class="stat-label">Win Rate</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value">+6.1%</div>
+        <div class="stat-label">Avg Edge</div>
+      </div>
+    </div>
+    
+    <div class="cta">JOIN THE WINNERS • LINK IN BIO</div>
+  </div>
+</body>
+</html>

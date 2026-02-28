@@ -1,0 +1,155 @@
+CAPCUT TIMELINE TEMPLATE - EdgeBet AI Video
+============================================
+
+Copy this structure exactly into CapCut
+
+═══════════════════════════════════════════════════════════════
+
+TOTAL DURATION: 60 seconds (1800 frames at 30fps)
+
+═══════════════════════════════════════════════════════════════
+
+[TRACK 6 - TEXT OVERLAYS]
+├─ 0:02-0:06  "Every bettor thinks they have an edge"
+├─ 0:04-0:08  "But do they really?" [TYPEWRITER ANIMATION]
+├─ 0:08-0:10  "90% LOSE" [RED, SCALE UP]
+├─ 0:10-0:13  "⚡ EdgeBet AI" [GLOW]
+├─ 0:20-0:25  "7 AI Agents Scan 24/7" [SLIDE UP]
+├─ 0:25-0:30  "83% Confidence" [COUNTER 0→83]
+├─ 0:35-0:40  "Parlay Optimizer" [FADE IN]
+├─ 0:40-0:45  "Track Your Edge" [SLIDE LEFT]
+├─ 0:52-0:58  "Download Today" [PULSE]
+└─ 0:58-1:00  "edgebet.app" [FADE IN]
+
+[TRACK 5 - ANIMATED ELEMENTS / SCREEN RECORDINGS]
+├─ 0:13-0:20  Agent icons animation (from HTML)
+├─ 0:25-0:30  Pick card build animation (from HTML)
+├─ 0:30-0:35  App screenshots (line movement)
+├─ 0:35-0:40  Parlay builder animation (from HTML)
+├─ 0:40-0:45  Profit counter animation (from HTML)
+└─ 0:52-0:58  App interface showcase
+
+[TRACK 4 - APP SCREENSHOTS / MOCKUPS]
+├─ 0:17-0:25  App home screen
+├─ 0:25-0:35  Pick analysis screens
+├─ 0:35-0:45  Parlay & tracker screens
+└─ 0:52-0:58  Phone with app glowing
+
+[TRACK 3 - STOCK FOOTAGE]
+├─ 0:00-0:02  Sportsbook/odds board [SPEED 1.5x]
+├─ 0:02-0:04  Person using phone [DESATURATED]
+├─ 0:20-0:25  NBA/football highlights
+└─ 0:48-0:52  Winning celebration
+
+[TRACK 2 - BACKGROUND / EFFECTS]
+├─ 0:00-0:10  Dark gradient + particles
+├─ 0:10-0:20  Cyan glow background
+├─ 0:20-0:52  Gradient overlays
+└─ 0:52-1:00  Clean gradient
+
+[TRACK 1 - TRANSITIONS / BASE]
+├─ 0:00-0:10  Glitch transitions between clips
+├─ 0:10-0:20  Smooth fade transitions
+├─ 0:20-0:52  Jump cuts on beat
+└─ 0:52-1:00  Fade to black
+
+═══════════════════════════════════════════════════════════════
+
+[AUDIO TRACK 3 - SOUND EFFECTS]
+├─ 0:00       Whoosh (start)
+├─ 0:04       Whoosh (text change)
+├─ 0:10       Impact hit (logo reveal)
+├─ 0:13-0:20  Pop sounds (each agent)
+├─ 0:25       Notification ding
+├─ 0:35       Success chime
+├─ 0:45       Whoosh (transition)
+└─ 0:58       Final impact
+
+[AUDIO TRACK 2 - BACKGROUND MUSIC]
+└─ 0:00-1:00  Upbeat sports track [VOLUME: -20dB]
+
+[AUDIO TRACK 1 - VOICEOVER]
+└─ 0:00-0:40  Voiceover narration [VOLUME: 0dB]
+
+═══════════════════════════════════════════════════════════════
+
+EFFECT PRESETS TO APPLY:
+
+1. GLITCH EFFECT
+   - Digital Glitch
+   - Intensity: 50
+   - Use at: 0:00, 0:08, 0:10
+
+2. GLOW EFFECT
+   - Color: #22d3ee (cyan)
+   - Intensity: 60
+   - Use on: All text overlays
+
+3. ZOOM BLUR
+   - Intensity: 30
+   - Use at: 0:17 (app open transition)
+
+4. COLOR GRADING (Apply to all video)
+   - Brightness: +5
+   - Contrast: +10
+   - Saturation: +5
+   - Shadows: +20
+   - Temperature: -5
+
+═══════════════════════════════════════════════════════════════
+
+TRANSITION TIMING:
+
+Time    | From                  | To                    | Effect
+--------|----------------------|----------------------|----------
+0:00    | Sportsbook           | Stressed person      | Glitch
+0:04    | Stressed person      | Text animation       | Fade
+0:08    | Text                 | Logo reveal          | Zoom Blur
+0:13    | Logo                 | Agent animation      | Slide Up
+0:20    | Agents               | Sports + app split   | Wipe
+0:25    | Split screen         | Pick animation       | Fade
+0:30    | Pick card            | Line movement        | Slide Left
+0:35    | Line movement        | Parlay animation     | Fade
+0:40    | Parlay               | Tracker              | Slide Right
+0:45    | Tracker              | Testimonials         | Fast Cut
+0:52    | Testimonials         | CTA                  | Fade
+0:58    | CTA                  | End                  | Fade Black
+
+═══════════════════════════════════════════════════════════════
+
+TEXT ANIMATION PRESETS:
+
+Hook Text (0:02-0:10):
+- Animation: Typewriter
+- Speed: Medium
+- Font: Bebas Neue, 60px
+- Color: White
+- Glow: Cyan #22d3ee
+
+Feature Labels (0:20-0:52):
+- Animation: Slide Up
+- Speed: Fast
+- Font: DM Sans Bold, 48px
+- Color: Cyan #22d3ee
+- Background: Semi-transparent black
+
+CTA Text (0:52-1:00):
+- Animation: Pulse
+- Speed: Medium
+- Font: Bebas Neue, 72px
+- Color: White
+- Glow: Strong cyan
+
+═══════════════════════════════════════════════════════════════
+
+EXPORT SETTINGS:
+
+Format: MP4
+Resolution: 1080 × 1920
+Frame Rate: 30fps
+Bitrate: 8 Mbps
+Codec: H.264
+
+File Name: EdgeBet_MixedMedia_Final
+
+═══════════════════════════════════════════════════════════════

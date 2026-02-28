@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, initial-scale=1.0">
+  <title>EdgeBet Quote Graphic</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      background: #09090b; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    .container {
+      width: 1080px;
+      height: 1080px;
+      background: linear-gradient(135deg, #09090b 0%, #0f172a 50%, #1e1b4b 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 100px;
+      position: relative;
+      overflow: hidden;
+    }
+    .container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(circle at 20% 80%, rgba(34,211,238,0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(124,58,237,0.15) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .quote-icon {
+      font-size: 120px;
+      color: #22d3ee;
+      opacity: 0.3;
+      margin-bottom: 40px;
+    }
+    .quote {
+      font-size: 56px;
+      font-weight: 700;
+      color: #fff;
+      text-align: center;
+      line-height: 1.4;
+      margin-bottom: 60px;
+    }
+    .quote span {
+      color: #22d3ee;
+    }
+    .divider {
+      width: 200px;
+      height: 4px;
+      background: linear-gradient(90deg, transparent, #22d3ee, transparent);
+      margin-bottom: 40px;
+    }
+    .author {
+      font-size: 36px;
+      color: #9ca3af;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+    }
+    .logo {
+      position: absolute;
+      bottom: 60px;
+      font-size: 32px;
+      font-weight: 900;
+      background: linear-gradient(90deg, #22d3ee, #7c3aed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="quote-icon">"</div>
+    <div class="quote">The house doesn't win because they're lucky.<br>They win because of <span>math</span>.<br>Now that math works for <span>you</span>.</div>
+    <div class="divider"></div>
+    <div class="author">EDGEBET AI</div>
+    <div class="logo">⚡ EDGEBET.AI</div>
+  </div>
+</body>
+</html>

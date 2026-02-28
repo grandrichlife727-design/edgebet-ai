@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, initial-scale=1.0">
+  <title>EdgeBet Animations for Video</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      background: #09090b; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      gap: 40px; 
+      padding: 40px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    
+    .phone-frame {
+      width: 480px;
+      height: 900px;
+      background: #09090b;
+      border-radius: 40px;
+      overflow: hidden;
+      position: relative;
+      border: 8px solid #1a1a1f;
+    }
+    
+    .section-label {
+      color: #22d3ee;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    
+    /* Animation 1: Pick Card Build */
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes fillBar {
+      from { width: 0; }
+      to { width: 78%; }
+    }
+    
+    @keyframes countUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.4); }
+      50% { box-shadow: 0 0 20px 10px rgba(34, 211, 238, 0.2); }
+    }
+    
+    .anim1 .pick-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 20px;
+      margin: 100px 16px;
+      animation: slideIn 0.6s ease-out forwards;
+    }
+    
+    .anim1 .sport-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      opacity: 0;
+      animation: countUp 0.4s ease-out 0.3s forwards;
+    }
+    
+    .anim1 .game-title {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 6px;
+      opacity: 0;
+      animation: countUp 0.4s ease-out 0.5s forwards;
+    }
+    
+    .anim1 .bet-text {
+      font-size: 24px;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 16px;
+      opacity: 0;
+      animation: countUp 0.4s ease-out 0.7s forwards;
+    }
+    
+    .anim1 .stats-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      opacity: 0;
+      animation: countUp 0.4s ease-out 0.9s forwards;
+    }
+    
+    .anim1 .bar {
+      flex: 1;
+      height: 5px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    
+    .anim1 .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg,#0891b2,#7c3aed);
+      border-radius: 99px;
+      width: 0;
+      animation: fillBar 1s ease-out 1.1s forwards;
+    }
+    
+    .anim1 .confidence-number {
+      font-size: 14px;
+      font-weight: 900;
+      color: #22d3ee;
+      opacity: 0;
+      animation: countUp 0.4s ease-out 1.3s forwards;
+    }
+    
+    .anim1 .pill {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      color: #6b7280;
+      background: rgba(255,255,255,0.06);
+      border-radius: 99px;
+      padding: 4px 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .anim1 .pill.cyan {
+      color: #22d3ee;
+      background: rgba(34,211,238,0.1);
+      border-color: rgba(34,211,238,0.3);
+    }
+    
+    .anim1 .odds {
+      position: absolute;
+      right: 36px;
+      top: 145px;
+      font-size: 22px;
+      font-weight: 900;
+      color: #4ade80;
+      font-family: monospace;
+      opacity: 0;
+      animation: countUp 0.4s ease-out 1.5s forwards;
+    }
+    
+    /* Animation 2: Scanning */
+    @keyframes scanProgress {
+      from { width: 0; }
+      to { width: 100%; }
+    }
+    
+    @keyframes agentPop {
+      0% { transform: scale(0); opacity: 0; }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.5); opacity: 0.5; }
+    }
+    
+    .anim2 {
+      padding: 100px 20px;
+    }
+    
+    .anim2 .scanning-title {
+      font-size: 28px;
+      font-weight: 900;
+      color: #fff;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    
+    .anim2 .scanning-subtitle {
+      font-size: 14px;
+      color: #6b7280;
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    .anim2 .progress-container {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      height: 8px;
+      margin-bottom: 40px;
+      overflow: hidden;
+    }
+    
+    .anim2 .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg,#0891b2,#7c3aed);
+      border-radius: 12px;
+      width: 0;
+      animation: scanProgress 8s ease-in-out infinite;
+    }
+    
+    .anim2 .agents-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    
+    .anim2 .agent {
+      background: rgba(34,211,238,0.08);
+      border: 1px solid rgba(34,211,238,0.2);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      transform: scale(0);
+      opacity: 0;
+    }
+    
+    .anim2 .agent:nth-child(1) { animation: agentPop 0.4s ease-out 0.5s forwards; }
+    .anim2 .agent:nth-child(2) { animation: agentPop 0.4s ease-out 1s forwards; }
+    .anim2 .agent:nth-child(3) { animation: agentPop 0.4s ease-out 1.5s forwards; }
+    .anim2 .agent:nth-child(4) { animation: agentPop 0.4s ease-out 2s forwards; }
+    .anim2 .agent:nth-child(5) { animation: agentPop 0.4s ease-out 2.5s forwards; }
+    .anim2 .agent:nth-child(6) { animation: agentPop 0.4s ease-out 3s forwards; }
+    .anim2 .agent:nth-child(7) { animation: agentPop 0.4s ease-out 3.5s forwards; grid-column: 2; }
+    
+    .anim2 .agent-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+    
+    .anim2 .agent-name {
+      font-size: 11px;
+      color: #9ca3af;
+      font-weight: 600;
+    }
+    
+    /* Animation 3: Counter */
+    @keyframes countNumber {
+      from { content: "0"; }
+      to { content: "1247"; }
+    }
+    
+    .anim3 {
+      padding: 150px 40px;
+      text-align: center;
+    }
+    
+    .anim3 .profit-label {
+      font-size: 16px;
+      color: #6b7280;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    
+    .anim3 .profit-number {
+      font-size: 72px;
+      font-weight: 900;
+      color: #4ade80;
+      font-family: monospace;
+      margin-bottom: 20px;
+    }
+    
+    .anim3 .record {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 40px;
+    }
+    
+    .anim3 .stat {
+      text-align: center;
+    }
+    
+    .anim3 .stat-number {
+      font-size: 48px;
+      font-weight: 900;
+      color: #fff;
+      font-family: monospace;
+    }
+    
+    .anim3 .stat-label {
+      font-size: 14px;
+      color: #6b7280;
+      margin-top: 8px;
+    }
+    
+    .anim3 .win { color: #4ade80; }
+    .anim3 .loss { color: #f87171; }
+    
+    /* Animation 4: Parlay Builder */
+    @keyframes slideUp {
+      from { transform: translateY(100px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    @keyframes totalPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    
+    .anim4 {
+      padding: 60px 16px;
+    }
+    
+    .anim4 .parlay-title {
+      font-size: 24px;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    
+    .anim4 .parlay-subtitle {
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 24px;
+    }
+    
+    .anim4 .leg {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      opacity: 0;
+      transform: translateX(-100%);
+    }
+    
+    .anim4 .leg:nth-child(1) { animation: slideIn 0.5s ease-out 0.2s forwards; }
+    .anim4 .leg:nth-child(2) { animation: slideIn 0.5s ease-out 0.6s forwards; }
+    .anim4 .leg:nth-child(3) { animation: slideIn 0.5s ease-out 1s forwards; }
+    
+    .anim4 .leg-info {
+      flex: 1;
+    }
+    
+    .anim4 .leg-game {
+      font-size: 11px;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+    
+    .anim4 .leg-pick {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+    }
+    
+    .anim4 .leg-odds {
+      font-size: 16px;
+      font-weight: 800;
+      color: #4ade80;
+      font-family: monospace;
+    }
+    
+    .anim4 .total-box {
+      background: linear-gradient(135deg,rgba(8,145,178,0.1),rgba(124,58,237,0.1));
+      border: 1px solid rgba(34,211,238,0.2);
+      border-radius: 16px;
+      padding: 24px;
+      margin-top: 24px;
+      text-align: center;
+      opacity: 0;
+      animation: slideUp 0.6s ease-out 1.4s forwards;
+    }
+    
+    .anim4 .total-label {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 8px;
+    }
+    
+    .anim4 .total-amount {
+      font-size: 48px;
+      font-weight: 900;
+      color: #22d3ee;
+      animation: totalPulse 2s ease-in-out infinite;
+    }
+    
+    .anim4 .total-profit {
+      font-size: 16px;
+      color: #4ade80;
+      margin-top: 8px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Animation 1: Pick Card Building -->
+  <div class="section-label">Animation 1: Pick Card Building (Record for 3-4 seconds)</div>
+  <div class="phone-frame anim1">
+    <div class="pick-card">
+      <div class="sport-row">
+        <span style="font-size: 16px;">🏀</span>
+        <div class="pill">NBA</div>
+        <div class="pill cyan">🔥 HIGH EDGE</div>
+      </div>
+      <div class="game-title">Orlando Magic vs Boston Celtics</div>
+      <div class="bet-text">Magic +4.5</div>
+      <div class="odds">+154</div>
+      <div class="stats-row">
+        <span style="font-size: 12px; color: #6b7280;">Edge: <span style="color: #22d3ee; font-weight: 700;">6.2%</span></span>
+        <div class="bar"><div class="bar-fill"></div></div>
+        <span class="confidence-number">78%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Animation 2: Scanning -->
+  <div class="section-label">Animation 2: Scanning (Record for 5-6 seconds)</div>
+  <div class="phone-frame anim2">
+    <div class="scanning-title">Scanning 5 Sports...</div>
+    <div class="scanning-subtitle">7-agent system analyzing markets</div>
+    <div class="progress-container">
+      <div class="progress-bar"></div>
+    </div>
+    <div class="agents-grid">
+      <div class="agent"><div class="agent-icon">🔍</div><div class="agent-name">Value</div></div>
+      <div class="agent"><div class="agent-icon">📈</div><div class="agent-name">Line Move</div></div>
+      <div class="agent"><div class="agent-icon">🐋</div><div class="agent-name">Sharp $</div></div>
+      <div class="agent"><div class="agent-icon">🏥</div><div class="agent-name">Injury</div></div>
+      <div class="agent"><div class="agent-icon">♟️</div><div class="agent-name">Situational</div></div>
+      <div class="agent"><div class="agent-icon">👥</div><div class="agent-name">Public $</div></div>
+      <div class="agent"><div class="agent-icon">🛡️</div><div class="agent-name">Confidence</div></div>
+    </div>
+  </div>
+
+  <!-- Animation 3: Profit Counter -->
+  <div class="section-label">Animation 3: Profit Counter (Record for 4-5 seconds)</div>
+  <div class="phone-frame anim3">
+    <div class="profit-label">Total Profit</div>
+    <div class="profit-number" id="profitCounter">+$0</div>
+    <div class="record">
+      <div class="stat">
+        <div class="stat-number win" id="wins">0</div>
+        <div class="stat-label">Wins</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number loss" id="losses">0</div>
+        <div class="stat-label">Losses</div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Animate profit counter
+    let profit = 0;
+    const profitTarget = 1247;
+    const profitEl = document.getElementById('profitCounter');
+    const profitInterval = setInterval(() => {
+      profit += 23;
+      if (profit >= profitTarget) {
+        profit = profitTarget;
+        clearInterval(profitInterval);
+      }
+      profitEl.textContent = `+$${profit.toLocaleString()}`;
+    }, 50);
+    
+    // Animate wins
+    let wins = 0;
+    const winsTarget = 47;
+    const winsEl = document.getElementById('wins');
+    const winsInterval = setInterval(() => {
+      wins++;
+      if (wins >= winsTarget) {
+        wins = winsTarget;
+        clearInterval(winsInterval);
+      }
+      winsEl.textContent = wins;
+    }, 60);
+    
+    // Animate losses
+    let losses = 0;
+    const lossesTarget = 21;
+    const lossesEl = document.getElementById('losses');
+    const lossesInterval = setInterval(() => {
+      losses++;
+      if (losses >= lossesTarget) {
+        losses = lossesTarget;
+        clearInterval(lossesInterval);
+      }
+      lossesEl.textContent = losses;
+    }, 120);
+  </script>
+
+  <!-- Animation 4: Parlay Builder -->
+  <div class="section-label">Animation 4: Parlay Builder (Record for 3-4 seconds)</div>
+  <div class="phone-frame anim4">
+    <div class="parlay-title">Parlay Builder</div>
+    <div class="parlay-subtitle">3 legs • +496 parlay odds</div>
+    
+    <div class="leg">
+      <div class="leg-info">
+        <div class="leg-game">Orlando Magic vs Boston Celtics</div>
+        <div class="leg-pick">Magic +4.5</div>
+      </div>
+      <div class="leg-odds">+154</div>
+    </div>
+    
+    <div class="leg">
+      <div class="leg-info">
+        <div class="leg-game">LA Lakers vs Denver Nuggets</div>
+        <div class="leg-pick">Under 224.5</div>
+      </div>
+      <div class="leg-odds">-110</div>
+    </div>
+    
+    <div class="leg">
+      <div class="leg-info">
+        <div class="leg-game">Colorado vs Utah Utes</div>
+        <div class="leg-pick">Buffaloes ML</div>
+      </div>
+      <div class="leg-odds">+180</div>
+    </div>
+    
+    <div class="total-box">
+      <div class="total-label">Potential Payout</div>
+      <div class="total-amount">$298.00</div>
+      <div class="total-profit">+$248 profit on $50 stake</div>
+    </div>
+  </div>
+
+</body>
+</html>

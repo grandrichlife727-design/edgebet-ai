@@ -1,0 +1,43 @@
+# Render Infrastructure-as-Code
+# This file tells Render how to provision your services
+
+services:
+  # Web service (API)
+  - type: web
+    name: edgebet-api
+    runtime: node
+    repo: https://github.com/yourusername/edgebet-backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: edgebet-db
+          property: connectionString
+      - key: STRIPE_SECRET_KEY
+        sync: false  # Set manually in Render dashboard
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false  # Set manually in Render dashboard
+    healthCheckPath: /health
+    autoDeploy: true
+
+  # Background worker (optional - for future use)
+  # - type: worker
+  #   name: edgebet-worker
+  #   runtime: node
+  #   repo: https://github.com/yourusername/edgebet-backend
+  #   buildCommand: npm install
+  #   startCommand: node worker.js
+  #   envVars:
+  #     - key: DATABASE_URL
+  #       fromDatabase:
+  #         name: edgebet-db
+  #         property: connectionString
+
+databases:
+  - name: edgebet-db
+    databaseName: edgebet
+    user: edgebet
+    plan: free  # Upgrade to starter for production
