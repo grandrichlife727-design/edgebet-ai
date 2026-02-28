@@ -273,42 +273,42 @@
     <div id="home-page" class="content active">
       <div class="page-title">Betting Tools</div>
       <div class="tools-grid">
-        <div class="tool-card" onclick="showPage('ev')">
+        <div class="tool-card" onclick="showToolPage('ev')">
           <div class="tool-icon">🧮</div>
           <div class="tool-name">EV Calculator</div>
           <div class="tool-desc">Find expected value</div>
         </div>
-        <div class="tool-card" onclick="showPage('parlay')">
+        <div class="tool-card" onclick="showToolPage('parlay')">
           <div class="tool-icon">🔗</div>
           <div class="tool-name">Parlay Builder</div>
           <div class="tool-desc">Build +EV parlays</div>
         </div>
-        <div class="tool-card" onclick="showPage('lines')">
+        <div class="tool-card" onclick="showToolPage('lines')">
           <div class="tool-icon">📊</div>
           <div class="tool-name">Line Shopping</div>
           <div class="tool-desc">Compare all books</div>
         </div>
-        <div class="tool-card" onclick="showPage('steam')">
+        <div class="tool-card" onclick="showToolPage('steam')">
           <div class="tool-icon">⚡</div>
           <div class="tool-name">Steam Moves</div>
           <div class="tool-desc">Track sharp action</div>
         </div>
-        <div class="tool-card" onclick="showPage('weather')">
+        <div class="tool-card" onclick="showToolPage('weather')">
           <div class="tool-icon">🌤️</div>
           <div class="tool-name">Weather</div>
           <div class="tool-desc">NFL/MLB impacts</div>
         </div>
-        <div class="tool-card" onclick="showPage('journal')">
+        <div class="tool-card" onclick="showToolPage('journal')">
           <div class="tool-icon">📝</div>
           <div class="tool-name">Journal</div>
           <div class="tool-desc">Track your bets</div>
         </div>
-        <div class="tool-card" onclick="showPage('picks')">
+        <div class="tool-card" onclick="showToolPage('picks')">
           <div class="tool-icon">🎯</div>
           <div class="tool-name">AI Picks</div>
           <div class="tool-desc">7-agent system</div>
         </div>
-        <div class="tool-card" onclick="showPage('arb')">
+        <div class="tool-card" onclick="showToolPage('arb')">
           <div class="tool-icon">💰</div>
           <div class="tool-name">Arbitrage</div>
           <div class="tool-desc">Risk-free profits</div>
@@ -443,23 +443,23 @@
 
     <!-- NAVIGATION -->
     <div class="nav">
-      <button class="nav-item active" onclick="showPage('home')">
+      <button class="nav-item active" onclick="showPage('home', this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
         <span>Home</span>
       </button>
-      <button class="nav-item" onclick="showPage('ev')">
+      <button class="nav-item" onclick="showPage('ev', this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
         <span>EV</span>
       </button>
-      <button class="nav-item" onclick="showPage('parlay')">
+      <button class="nav-item" onclick="showPage('parlay', this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
         <span>Parlay</span>
       </button>
-      <button class="nav-item" onclick="showPage('picks')">
+      <button class="nav-item" onclick="showPage('picks', this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         <span>Picks</span>
       </button>
-      <button class="nav-item" onclick="showPage('journal')">
+      <button class="nav-item" onclick="showPage('journal', this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
         <span>Journal</span>
       </button>
@@ -473,11 +473,24 @@
     let parlayLegCount = 1;
     
     // Navigation
-    function showPage(pageName) {
+    function showPage(pageName, btn) {
       document.querySelectorAll('.content').forEach(p => p.classList.remove('active'));
       document.getElementById(pageName + '-page').classList.add('active');
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-      event.currentTarget.classList.add('active');
+      if (btn) btn.classList.add('active');
+    }
+    
+    // Navigation from tool cards (no button highlight needed)
+    function showToolPage(pageName) {
+      document.querySelectorAll('.content').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageName + '-page').classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      // Highlight the closest nav item if exists
+      const navMap = { 'ev': 1, 'parlay': 2, 'picks': 3, 'journal': 4 };
+      const navIndex = navMap[pageName];
+      if (navIndex !== undefined) {
+        document.querySelectorAll('.nav-item')[navIndex]?.classList.add('active');
+      }
     }
     
     // Theme Toggle
