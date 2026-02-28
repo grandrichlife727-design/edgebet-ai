@@ -16,7 +16,7 @@ EdgeBet AI scans multiple sportsbooks to find value betting opportunities:
 - **Confidence scoring** - 65-95% based on data quality
 - **Multi-sport** - NBA, NFL, NHL, NCAAB, MLB
 
-## 🚀 Quick Start
+## 🚀 Quick Start.
 
 ### Live Demo
 👉 **[Try the App](https://grandrichlife727-design.github.io/edgebet-ai/edgebet-preview.html)**
