@@ -6,6 +6,13 @@
   <title>EdgeBet AI - 7-Agent Consensus System</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --accent: #22d3ee;
+      --accent2: #a78bfa;
+      --success: #4ade80;
+      --danger: #ef4444;
+      --warning: #fb923c;
+    }
     body {
       background: #09090b;
       color: #fff;
@@ -13,6 +20,7 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      overflow-x: hidden;
     }
     .app {
       max-width: 480px;
@@ -22,17 +30,48 @@
       background: #09090b;
       position: relative;
     }
+    
+    /* Animations */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+    
+    .animate-in { animation: fadeInUp 0.4s ease-out; }
+    .animate-slide { animation: slideIn 0.3s ease-out; }
+    
     .header {
       padding: 12px 16px;
       border-bottom: 1px solid rgba(255,255,255,0.07);
       display: flex;
       justify-content: space-between;
       align-items: center;
+      position: sticky;
+      top: 0;
+      background: rgba(9,9,11,0.95);
+      backdrop-filter: blur(20px);
+      z-index: 50;
     }
     .logo {
       font-size: 20px;
       font-weight: 900;
-      background: linear-gradient(90deg, #22d3ee, #a78bfa 60%);
+      background: linear-gradient(90deg, var(--accent), var(--accent2) 60%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -45,26 +84,66 @@
       border-radius: 99px;
       padding: 4px 10px;
       font-size: 11px;
-      color: #4ade80;
+      color: var(--success);
     }
     .live-dot {
       width: 6px;
       height: 6px;
-      background: #4ade80;
+      background: var(--success);
       border-radius: 50%;
       animation: pulse 1.5s infinite;
     }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
+    .arb-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: linear-gradient(135deg, rgba(251,146,60,0.15), rgba(251,146,60,0.05));
+      border: 1px solid rgba(251,146,60,0.3);
+      border-radius: 99px;
+      padding: 4px 10px;
+      font-size: 11px;
+      color: var(--warning);
+      cursor: pointer;
+      animation: bounce 2s infinite;
     }
+    
     .content {
-      padding: 16px 16px 90px;
+      padding: 16px 16px 100px;
       display: none;
+      min-height: calc(100vh - 60px);
     }
     .content.active {
       display: block;
     }
+    
+    /* Pull to refresh indicator */
+    .ptr-indicator {
+      text-align: center;
+      padding: 20px;
+      color: #6b7280;
+      font-size: 12px;
+      opacity: 0;
+      transition: opacity 0.2s;
+      height: 0;
+      overflow: hidden;
+    }
+    .ptr-indicator.visible {
+      opacity: 1;
+      height: auto;
+    }
+    .ptr-indicator .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255,255,255,0.1);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
     .scan-btn {
       width: 100%;
       padding: 16px;
@@ -76,19 +155,29 @@
       font-weight: 800;
       cursor: pointer;
       margin-bottom: 16px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .scan-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(34,211,238,0.2);
     }
     .scan-btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
+      transform: none;
     }
-    .error {
-      background: rgba(239,68,68,0.1);
-      border: 1px solid rgba(239,68,68,0.3);
-      color: #ef4444;
-      padding: 16px;
-      border-radius: 12px;
-      margin-bottom: 16px;
-      font-size: 14px;
+    .scan-btn::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+    .scan-btn:hover::after {
+      left: 100%;
     }
     
     /* Filters */
@@ -108,6 +197,11 @@
       cursor: pointer;
       flex: 1;
       min-width: 100px;
+      transition: border-color 0.2s;
+    }
+    .filter-select:hover, .filter-select:focus {
+      border-color: var(--accent);
+      outline: none;
     }
     .filter-select option {
       background: #1a1a1f;
@@ -125,11 +219,63 @@
     }
     .edge-slider input {
       flex: 1;
+      -webkit-appearance: none;
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 99px;
+      outline: none;
+    }
+    .edge-slider input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      background: var(--accent);
+      border-radius: 50%;
+      cursor: pointer;
     }
     .edge-slider span {
       font-size: 12px;
       color: #9ca3af;
       white-space: nowrap;
+    }
+    
+    /* Skeleton Loading */
+    .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 8px;
+    }
+    .skeleton-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+    .skeleton-line { height: 16px; margin-bottom: 12px; }
+    .skeleton-line.short { width: 60%; }
+    .skeleton-line.tiny { width: 40%; height: 12px; }
+    
+    .error {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: var(--danger);
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      animation: fadeInUp 0.3s ease-out;
+    }
+    .error button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      background: rgba(239,68,68,0.2);
+      border: 1px solid rgba(239,68,68,0.4);
+      border-radius: 8px;
+      color: var(--danger);
+      cursor: pointer;
+      font-size: 12px;
     }
     
     /* Pick Cards */
@@ -140,10 +286,18 @@
       padding: 20px;
       margin-bottom: 12px;
       cursor: pointer;
-      transition: border-color 0.2s;
+      transition: all 0.2s ease;
+      animation: fadeInUp 0.4s ease-out;
+      position: relative;
     }
     .pick-card:hover {
       border-color: rgba(34,211,238,0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    .pick-card.arb-highlight {
+      border-color: var(--warning);
+      background: linear-gradient(135deg, rgba(251,146,60,0.05), rgba(255,255,255,0.03));
     }
     .pick-header {
       display: flex;
@@ -161,11 +315,20 @@
     .edge-badge {
       background: rgba(34,211,238,0.1);
       border: 1px solid rgba(34,211,238,0.3);
-      color: #22d3ee;
+      color: var(--accent);
       padding: 4px 10px;
       border-radius: 99px;
       font-size: 12px;
       font-weight: 800;
+    }
+    .arb-flash {
+      background: linear-gradient(135deg, var(--warning), #f59e0b);
+      color: #000;
+      padding: 4px 10px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 800;
+      animation: pulse 2s infinite;
     }
     .game-title {
       font-size: 15px;
@@ -181,7 +344,7 @@
     .pick-odds {
       font-size: 18px;
       font-weight: 700;
-      color: #4ade80;
+      color: var(--success);
       font-family: monospace;
     }
     .odds-comparison {
@@ -193,9 +356,28 @@
       color: #9ca3af;
     }
     .odds-comparison .best {
-      color: #4ade80;
+      color: var(--success);
       font-weight: 700;
     }
+    
+    /* Sparkline */
+    .sparkline-container {
+      margin-top: 12px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sparkline {
+      flex: 1;
+      height: 30px;
+    }
+    .sparkline-label {
+      font-size: 10px;
+      color: #6b7280;
+      white-space: nowrap;
+    }
+    
     .confidence-bar {
       margin-top: 16px;
       padding-top: 16px;
@@ -216,7 +398,7 @@
     }
     .conf-fill {
       height: 100%;
-      background: linear-gradient(90deg, #22d3ee, #a78bfa);
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
       border-radius: 99px;
       transition: width 0.5s ease;
     }
@@ -231,10 +413,36 @@
       border-radius: 6px;
       font-size: 10px;
       font-weight: 700;
+      transition: transform 0.2s;
     }
-    .agent-a { background: rgba(34,211,238,0.15); color: #22d3ee; }
-    .agent-b { background: rgba(167,139,250,0.15); color: #a78bfa; }
-    .agent-c { background: rgba(251,146,60,0.15); color: #fb923c; }
+    .agent-pill:hover {
+      transform: scale(1.05);
+    }
+    .agent-a { background: rgba(34,211,238,0.15); color: var(--accent); }
+    .agent-b { background: rgba(167,139,250,0.15); color: var(--accent2); }
+    .agent-c { background: rgba(251,146,60,0.15); color: var(--warning); }
+    
+    /* Share Button */
+    .share-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .share-btn:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: var(--accent);
+    }
+    .share-btn svg {
+      width: 16px;
+      height: 16px;
+      color: #9ca3af;
+    }
     
     /* Modal */
     .modal-overlay {
@@ -245,9 +453,12 @@
       display: none;
       align-items: flex-end;
       justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
     }
     .modal-overlay.active {
       display: flex;
+      opacity: 1;
     }
     .modal {
       background: #111113;
@@ -259,6 +470,11 @@
       padding: 24px;
       border: 1px solid rgba(255,255,255,0.1);
       border-bottom: none;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+    }
+    .modal-overlay.active .modal {
+      transform: translateY(0);
     }
     .modal-header {
       display: flex;
@@ -276,6 +492,10 @@
       color: #6b7280;
       font-size: 24px;
       cursor: pointer;
+      transition: color 0.2s;
+    }
+    .modal-close:hover {
+      color: #fff;
     }
     .agent-breakdown {
       margin-bottom: 20px;
@@ -288,6 +508,10 @@
       background: rgba(255,255,255,0.03);
       border-radius: 12px;
       margin-bottom: 8px;
+      transition: background 0.2s;
+    }
+    .agent-row:hover {
+      background: rgba(255,255,255,0.05);
     }
     .agent-icon {
       width: 36px;
@@ -326,7 +550,7 @@
     .consensus-score {
       font-size: 48px;
       font-weight: 900;
-      background: linear-gradient(90deg, #22d3ee, #a78bfa);
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -341,13 +565,81 @@
       font-weight: 800;
       cursor: pointer;
       margin-top: 16px;
+      transition: all 0.2s;
+    }
+    .track-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(34,211,238,0.2);
     }
     .track-btn.tracked {
       background: rgba(74,222,128,0.2);
-      color: #4ade80;
+      color: var(--success);
     }
     
-    /* Bet Tracker */
+    /* Arb Modal */
+    .arb-card {
+      background: linear-gradient(135deg, rgba(251,146,60,0.1), rgba(251,146,60,0.05));
+      border: 1px solid rgba(251,146,60,0.3);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .arb-profit {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--warning);
+    }
+    .arb-books {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(251,146,60,0.2);
+    }
+    .arb-book {
+      text-align: center;
+    }
+    .arb-book-name {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+    .arb-book-odds {
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+    }
+    
+    /* Props Tab */
+    .prop-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      animation: fadeInUp 0.4s ease-out;
+    }
+    .prop-card:hover {
+      border-color: var(--accent2);
+    }
+    .prop-player {
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .prop-market {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 8px;
+    }
+    .prop-line {
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--accent2);
+    }
+    
+    /* Tracker */
     .tracker-stats {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -360,11 +652,17 @@
       border-radius: 12px;
       padding: 16px;
       text-align: center;
+      transition: transform 0.2s;
+    }
+    .stat-box:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,0.15);
     }
     .stat-value {
-      font-size: 24px;
+      font-size: 28px;
       font-weight: 900;
-      color: #22d3ee;
+      color: var(--accent);
+      transition: color 0.3s;
     }
     .stat-label {
       font-size: 11px;
@@ -377,6 +675,7 @@
       border-radius: 16px;
       padding: 16px;
       margin-bottom: 12px;
+      animation: fadeInUp 0.3s ease-out;
     }
     .bet-header {
       display: flex;
@@ -412,13 +711,19 @@
       font-size: 12px;
       font-weight: 700;
       cursor: pointer;
+      transition: all 0.2s;
     }
-    .win-btn { background: rgba(74,222,128,0.15); color: #4ade80; }
-    .loss-btn { background: rgba(239,68,68,0.15); color: #ef4444; }
+    .result-btn:hover {
+      transform: scale(1.05);
+    }
+    .win-btn { background: rgba(74,222,128,0.15); color: var(--success); }
+    .loss-btn { background: rgba(239,68,68,0.15); color: var(--danger); }
     .push-btn { background: rgba(156,163,175,0.15); color: #9ca3af; }
     .result-btn.selected {
       box-shadow: 0 0 0 2px currentColor;
     }
+    
+    /* Empty State */
     .empty-state {
       text-align: center;
       padding: 60px 20px;
@@ -441,30 +746,47 @@
       width: 40px;
       height: 40px;
       border: 3px solid rgba(255,255,255,0.1);
-      border-top-color: #22d3ee;
+      border-top-color: var(--accent);
       border-radius: 50%;
       animation: spin 1s linear infinite;
       margin: 0 auto 16px;
     }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
     
     /* Chat */
-    .model-breakdown {
-      margin-top: 16px;
+    .chat-container {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
       padding: 16px;
-      background: rgba(0,0,0,0.2);
+      margin-bottom: 16px;
+      height: 400px;
+      overflow-y: auto;
+    }
+    .chat-message {
+      margin-bottom: 12px;
+      animation: fadeInUp 0.3s ease-out;
+    }
+    .chat-message.user {
+      text-align: right;
+    }
+    .chat-bubble {
+      display: inline-block;
+      padding: 12px;
       border-radius: 12px;
-      font-size: 12px;
-      color: #9ca3af;
+      font-size: 14px;
+      max-width: 80%;
+      word-wrap: break-word;
     }
-    .model-breakdown div {
-      margin-bottom: 6px;
+    .chat-bubble.ai {
+      background: rgba(34,211,238,0.1);
+      color: #fff;
     }
-    .model-breakdown strong {
-      color: #22d3ee;
+    .chat-bubble.user {
+      background: rgba(167,139,250,0.1);
+      color: #fff;
     }
+    
+    /* Navigation */
     .nav {
       position: fixed;
       bottom: 0;
@@ -491,38 +813,67 @@
       font-size: 10px;
       cursor: pointer;
       padding: 4px 12px;
+      transition: color 0.2s;
+      position: relative;
     }
-    .nav-item.active {
-      color: #22d3ee;
+    .nav-item:hover, .nav-item.active {
+      color: var(--accent);
     }
     .nav-item svg {
       width: 24px;
       height: 24px;
+      transition: transform 0.2s;
     }
+    .nav-item:hover svg {
+      transform: scale(1.1);
+    }
+    .nav-badge {
+      position: absolute;
+      top: 0;
+      right: 8px;
+      width: 8px;
+      height: 8px;
+      background: var(--warning);
+      border-radius: 50%;
+    }
+    
     .page-title {
       font-size: 24px;
       font-weight: 900;
       margin-bottom: 20px;
       color: #fff;
     }
-    .placeholder-card {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 20px;
-      padding: 40px 20px;
-      text-align: center;
-      color: #6b7280;
-    }
-    .placeholder-card svg {
-      width: 48px;
-      height: 48px;
-      margin-bottom: 16px;
-      color: #22d3ee;
-    }
-    .coming-soon {
+    .section-title {
       font-size: 14px;
+      font-weight: 700;
       color: #9ca3af;
-      margin-top: 8px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(0,0,0,0.9);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 16px 24px;
+      color: #fff;
+      font-size: 14px;
+      z-index: 300;
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    .toast.success {
+      border-color: var(--success);
     }
   </style>
 </head>
@@ -530,10 +881,19 @@
   <div class="app">
     <div class="header">
       <div class="logo">EdgeBet AI</div>
-      <div class="live-badge">
-        <div class="live-dot"></div>
-        <span>LIVE</span>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <div class="arb-badge" id="arbBadge" style="display: none;" onclick="showArbitrageModal()">
+          💰 <span id="arbCount">0</span> ARBS
+        </div>
+        <div class="live-badge">
+          <div class="live-dot"></div>
+          <span>LIVE</span>
+        </div>
       </div>
+    </div>
+    
+    <div class="ptr-indicator" id="ptrIndicator">
+      <span class="spinner"></span> Pull to refresh...
     </div>
 
     <!-- PICKS PAGE -->
@@ -542,7 +902,6 @@
         ⚡ SCAN FOR PICKS
       </button>
       
-      <!-- Filters -->
       <div class="filter-bar">
         <select class="filter-select" id="sportFilter" onchange="applyFilters()">
           <option value="all">All Sports</option>
@@ -562,14 +921,34 @@
       <div id="picks-container"></div>
     </div>
 
-    <!-- PARLAY PAGE -->
-    <div id="parlay-page" class="content">
-      <div class="page-title">Parlay Builder</div>
-      <div class="placeholder-card">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-        <div>Build your parlay here</div>
-        <div class="coming-soon">Select picks from the Picks tab to add them here</div>
+    <!-- PROPS PAGE -->
+    <div id="props-page" class="content">
+      <div class="page-title">Player Props</div>
+      <div class="filter-bar">
+        <select class="filter-select" id="propSportFilter" onchange="loadProps()">
+          <option value="basketball_nba">🏀 NBA</option>
+          <option value="americanfootball_nfl">🏈 NFL</option>
+          <option value="icehockey_nhl">🏒 NHL</option>
+          <option value="baseball_mlb">⚾ MLB</option>
+        </select>
       </div>
+      <button class="scan-btn" onclick="loadProps()" id="propsBtn">
+        🔍 SCAN PROPS
+      </button>
+      <div id="props-container"></div>
+    </div>
+
+    <!-- ARBITRAGE PAGE -->
+    <div id="arb-page" class="content">
+      <div class="page-title">Arbitrage Alerts</div>
+      <div style="background: linear-gradient(135deg, rgba(251,146,60,0.1), rgba(251,146,60,0.05)); border: 1px solid rgba(251,146,60,0.3); border-radius: 16px; padding: 20px; margin-bottom: 20px;">
+        <div style="font-size: 14px; color: var(--warning); margin-bottom: 8px;">💰 Guaranteed Profit</div>
+        <div style="font-size: 13px; color: #9ca3af;">Arbitrage = bet both sides at different books for risk-free profit. Requires accounts at multiple sportsbooks.</div>
+      </div>
+      <button class="scan-btn" onclick="loadArbitrage()" id="arbBtn" style="background: linear-gradient(135deg, var(--warning), #f59e0b);">
+        🔥 FIND ARBS
+      </button>
+      <div id="arb-container"></div>
     </div>
 
     <!-- TRACKER PAGE -->
@@ -585,7 +964,7 @@
           <div class="stat-label">Losses</div>
         </div>
         <div class="stat-box">
-          <div class="stat-value" id="tracker-profit" style="color: #4ade80;">+$0</div>
+          <div class="stat-value" id="tracker-profit" style="color: var(--success);">+$0</div>
           <div class="stat-label">Profit</div>
         </div>
       </div>
@@ -595,10 +974,10 @@
     <!-- CHAT PAGE -->
     <div id="chat-page" class="content">
       <div class="page-title">AI Chat</div>
-      <div id="chat-container" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 16px; margin-bottom: 16px; height: 400px; overflow-y: auto;">
-        <div class="chat-message" style="margin-bottom: 12px;">
-          <div style="font-size: 12px; color: #22d3ee; margin-bottom: 4px;">EdgeBet AI</div>
-          <div style="font-size: 14px; color: #fff; background: rgba(34,211,238,0.1); padding: 12px; border-radius: 12px; display: inline-block; max-width: 80%;">Hey! I'm EdgeBet AI. Ask me about picks, betting strategy, or how the 7-agent system works!</div>
+      <div class="chat-container" id="chat-container">
+        <div class="chat-message">
+          <div style="font-size: 12px; color: var(--accent); margin-bottom: 4px;">EdgeBet AI</div>
+          <div class="chat-bubble ai">Hey! I'm EdgeBet AI. Ask me about picks, betting strategy, arbitrage, or how the 7-agent system works!</div>
         </div>
       </div>
       <div style="display: flex; gap: 8px;">
@@ -607,79 +986,13 @@
       </div>
       <div style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px;">
         <button onclick="quickChat('How does the 7-agent system work?')" style="padding: 6px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 99px; color: #9ca3af; font-size: 12px; cursor: pointer;">How does it work?</button>
-        <button onclick="quickChat('What is edge betting?')" style="padding: 6px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 99px; color: #9ca3af; font-size: 12px; cursor: pointer;">What is edge?</button>
+        <button onclick="quickChat('What is arbitrage?')" style="padding: 6px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 99px; color: #9ca3af; font-size: 12px; cursor: pointer;">Arbitrage?</button>
         <button onclick="quickChat('Bankroll tips')" style="padding: 6px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 99px; color: #9ca3af; font-size: 12px; cursor: pointer;">Bankroll tips</button>
         <button onclick="quickChat('Sharp money vs public')" style="padding: 6px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 99px; color: #9ca3af; font-size: 12px; cursor: pointer;">Sharp vs Public</button>
       </div>
     </div>
 
-    <!-- MORE PAGE -->
-    <div id="more-page" class="content">
-      <div class="page-title">Account</div>
-      
-      <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 20px; margin-bottom: 16px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <div>
-            <div style="font-size: 14px; color: #9ca3af; margin-bottom: 4px;">Current Plan</div>
-            <div style="font-size: 28px; font-weight: 900; color: #22d3ee;">Free</div>
-          </div>
-          <div style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #22d3ee; padding: 8px 16px; border-radius: 99px; font-size: 12px; font-weight: 700;">2 picks/day</div>
-        </div>
-        <div style="font-size: 12px; color: #6b7280;">Upgrade for unlimited picks and full analysis</div>
-      </div>
-
-      <div style="font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 12px; margin-top: 24px;">Upgrade Options</div>
-      
-      <div style="background: rgba(34,211,238,0.05); border: 1px solid rgba(34,211,238,0.2); border-radius: 16px; padding: 20px; margin-bottom: 12px; position: relative;">
-        <div style="position: absolute; top: -10px; right: 16px; background: linear-gradient(135deg, #0891b2, #7c3aed); color: #fff; padding: 4px 12px; border-radius: 99px; font-size: 10px; font-weight: 800;">POPULAR</div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <div style="font-size: 18px; font-weight: 800; color: #fff;">Pro Plan</div>
-          <div style="font-size: 24px; font-weight: 900; color: #22d3ee;">$19.99<span style="font-size: 14px; color: #6b7280;">/mo</span></div>
-        </div>
-        <div style="font-size: 12px; color: #9ca3af; margin-bottom: 16px;">Unlimited picks • Full 7-agent breakdown • Live odds • Line alerts</div>
-        <a href="https://buy.stripe.com/test_14A28r6qJ9nh206gEcgYU00" target="_blank" style="display: block; text-align: center; padding: 14px; background: linear-gradient(135deg, #0891b2, #7c3aed); border-radius: 12px; color: #fff; font-weight: 800; text-decoration: none;">Upgrade to Pro →</a>
-      </div>
-
-      <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; margin-bottom: 12px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <div style="font-size: 18px; font-weight: 800; color: #fff;">Sharp Plan</div>
-          <div style="font-size: 24px; font-weight: 900; color: #a78bfa;">$49.99<span style="font-size: 14px; color: #6b7280;">/mo</span></div>
-        </div>
-        <div style="font-size: 12px; color: #9ca3af; margin-bottom: 16px;">Everything in Pro • Sharp money tracker • Discord access • Priority alerts</div>
-        <a href="https://buy.stripe.com/test_eVqfZhg1jbvp9syafOgYU01" target="_blank" style="display: block; text-align: center; padding: 14px; background: rgba(255,255,255,0.1); border-radius: 12px; color: #fff; font-weight: 800; text-decoration: none;">Go Sharp →</a>
-      </div>
-
-      <div style="font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 12px; margin-top: 24px;">Settings</div>
-      
-      <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden;">
-        <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
-          <div style="font-size: 14px; color: #fff;">Notifications</div>
-          <div style="width: 44px; height: 24px; background: #22d3ee; border-radius: 99px; position: relative; cursor: pointer;">
-            <div style="width: 20px; height: 20px; background: #fff; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
-          </div>
-        </div>
-        <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
-          <div style="font-size: 14px; color: #fff;">Dark Mode</div>
-          <div style="width: 44px; height: 24px; background: #22d3ee; border-radius: 99px; position: relative; cursor: pointer;">
-            <div style="width: 20px; height: 20px; background: #fff; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
-          </div>
-        </div>
-        <div style="padding: 16px; display: flex; justify-content: space-between; align-items: center;">
-          <div style="font-size: 14px; color: #fff;">Version</div>
-          <div style="font-size: 14px; color: #6b7280;">2.0.0</div>
-        </div>
-      </div>
-
-      <div style="margin-top: 24px; text-align: center;">
-        <a href="mailto:support@edgebet.ai" style="font-size: 12px; color: #6b7280; text-decoration: none;">Contact Support</a>
-        <span style="color: #374151; margin: 0 8px;">•</span>
-        <a href="#" style="font-size: 12px; color: #6b7280; text-decoration: none;">Privacy Policy</a>
-        <span style="color: #374151; margin: 0 8px;">•</span>
-        <a href="#" style="font-size: 12px; color: #6b7280; text-decoration: none;">Terms</a>
-      </div>
-    </div>
-
-    <!-- PICK DETAIL MODAL -->
+    <!-- MODALS -->
     <div class="modal-overlay" id="pickModal" onclick="closeModal(event)">
       <div class="modal" onclick="event.stopPropagation()">
         <div class="modal-header">
@@ -690,27 +1003,41 @@
       </div>
     </div>
 
+    <div class="modal-overlay" id="arbModal" onclick="closeArbModal(event)">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title">💰 Arbitrage Opportunities</div>
+          <button class="modal-close" onclick="closeArbModal()">&times;</button>
+        </div>
+        <div id="arb-modal-content"></div>
+      </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
     <!-- NAVIGATION -->
     <div class="nav">
-      <button class="nav-item active" onclick="showPage('picks')">
+      <button class="nav-item active" onclick="showPage('picks', this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         <span>Picks</span>
       </button>
-      <button class="nav-item" onclick="showPage('parlay')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-        <span>Parlay</span>
+      <button class="nav-item" onclick="showPage('props', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        <span>Props</span>
       </button>
-      <button class="nav-item" onclick="showPage('tracker')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8v8m-4-5v5m-4-2v2M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      <button class="nav-item" onclick="showPage('arb', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>Arbs</span>
+        <div class="nav-badge" id="navArbBadge" style="display: none;"></div>
+      </button>
+      <button class="nav-item" onclick="showPage('tracker', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
         <span>Tracker</span>
       </button>
-      <button class="nav-item" onclick="showPage('chat')">
+      <button class="nav-item" onclick="showPage('chat', this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
         <span>Chat</span>
-      </button>
-      <button class="nav-item" onclick="showPage('more')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-        <span>More</span>
       </button>
     </div>
   </div>
@@ -719,15 +1046,51 @@
     const BACKEND = "https://edgebet-backend-1.onrender.com";
     let allPicks = [];
     let currentPick = null;
+    let allArbs = [];
+    let touchStartY = 0;
 
     // Navigation
-    function showPage(pageName) {
+    function showPage(pageName, btn) {
       document.querySelectorAll('.content').forEach(page => page.classList.remove('active'));
       document.getElementById(pageName + '-page').classList.add('active');
-      document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
-      event.currentTarget.classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
       
       if (pageName === 'tracker') loadTracker();
+      if (pageName === 'arb' && allArbs.length === 0) loadArbitrage();
+    }
+
+    // Pull to refresh
+    document.addEventListener('touchstart', e => {
+      touchStartY = e.touches[0].clientY;
+    });
+    
+    document.addEventListener('touchmove', e => {
+      const touchY = e.touches[0].clientY;
+      const scrollTop = document.querySelector('.content.active')?.scrollTop || 0;
+      
+      if (scrollTop === 0 && touchY > touchStartY + 50) {
+        document.getElementById('ptrIndicator').classList.add('visible');
+      }
+    });
+    
+    document.addEventListener('touchend', e => {
+      const ptr = document.getElementById('ptrIndicator');
+      if (ptr.classList.contains('visible')) {
+        ptr.classList.remove('visible');
+        const activePage = document.querySelector('.content.active');
+        if (activePage.id === 'picks-page') scanPicks();
+        if (activePage.id === 'props-page') loadProps();
+        if (activePage.id === 'arb-page') loadArbitrage();
+      }
+    });
+
+    // Toast
+    function showToast(message, type = 'default') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast show' + (type === 'success' ? ' success' : '');
+      setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
     // Filters
@@ -745,6 +1108,18 @@
       renderPicks(filtered);
     }
 
+    // Skeleton loading
+    function showSkeleton(count = 3) {
+      const container = document.getElementById('picks-container');
+      container.innerHTML = Array(count).fill(0).map(() => `
+        <div class="skeleton-card">
+          <div class="skeleton skeleton-line short"></div>
+          <div class="skeleton skeleton-line"></div>
+          <div class="skeleton skeleton-line tiny"></div>
+        </div>
+      `).join('');
+    }
+
     // Scan for picks
     async function scanPicks() {
       const btn = document.getElementById('scanBtn');
@@ -754,17 +1129,11 @@
       btn.disabled = true;
       btn.textContent = 'Scanning...';
       errorContainer.innerHTML = '';
-      
-      container.innerHTML = `
-        <div class="loading">
-          <div class="spinner"></div>
-          <div>AI agents scanning...</div>
-        </div>
-      `;
+      showSkeleton();
       
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
         
         const response = await fetch(BACKEND + '/scan', { signal: controller.signal });
         clearTimeout(timeoutId);
@@ -775,10 +1144,25 @@
         if (data.error) throw new Error(data.error);
         
         allPicks = data.consensus_picks || [];
+        allArbs = data.arbitrage_opportunities || [];
+        
+        // Update arb badges
+        if (allArbs.length > 0) {
+          document.getElementById('arbBadge').style.display = 'flex';
+          document.getElementById('arbCount').textContent = allArbs.length;
+          document.getElementById('navArbBadge').style.display = 'block';
+        }
+        
         applyFilters();
+        showToast(`Found ${allPicks.length} picks & ${allArbs.length} arbs!`, 'success');
         
       } catch (err) {
-        errorContainer.innerHTML = `<div class="error">${err.name === 'AbortError' ? 'Request timed out. Try again.' : err.message}</div>`;
+        errorContainer.innerHTML = `
+          <div class="error">
+            ${err.name === 'AbortError' ? 'Request timed out. Try again.' : err.message}
+            <br><button onclick="scanPicks()">Retry</button>
+          </div>
+        `;
         container.innerHTML = '';
       } finally {
         btn.disabled = false;
@@ -791,49 +1175,86 @@
       const container = document.getElementById('picks-container');
       
       if (!picks || picks.length === 0) {
-        container.innerHTML = '<div style="text-align:center;padding:40px;color:#6b7280;">No picks match your filters.<br>Try adjusting your criteria.</div>';
+        container.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><div>No picks match your filters.</div><div style="font-size: 14px; margin-top: 8px;">Try adjusting your criteria</div></div>';
         return;
       }
       
-      container.innerHTML = picks.map(pick => {
+      container.innerHTML = picks.map((pick, i) => {
         const agentGrades = getAgentGrades(pick);
+        const hasArb = allArbs.some(a => a.game === pick.game);
+        const sparkline = renderSparkline(pick.lineSparkline);
+        
         return `
-          <div class="pick-card" onclick="showPickDetail('${pick.id}')">
-            <div class="pick-header">
-              <div class="sport-tag">
-                <span>${pick.emoji || '🎯'}</span>
-                <span>${pick.sport}</span>
+          <div class="pick-card ${hasArb ? 'arb-highlight' : ''}" style="animation-delay: ${i * 0.05}s">
+            ${hasArb ? '<div class="arb-flash" style="position: absolute; top: -8px; right: 20px;">ARB!</div>' : ''}
+            <button class="share-btn" onclick="sharePick(event, '${pick.id}')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+            </button>
+            <div onclick="showPickDetail('${pick.id}')">
+              <div class="pick-header">
+                <div class="sport-tag">
+                  <span>${pick.emoji || '🎯'}</span>
+                  <span>${pick.sport}</span>
+                </div>
+                <div class="edge-badge">+${pick.edge}% EDGE</div>
               </div>
-              <div class="edge-badge">+${pick.edge}% EDGE</div>
-            </div>
-            <div class="game-title">${pick.game}</div>
-            <div class="pick-bet">${pick.bet}</div>
-            <div class="pick-odds">${pick.odds}</div>
-            
-            <div class="odds-comparison">
-              <span class="best">Best:</span> ${pick.model_breakdown?.best_book || 'Multiple books'} | 
-              <span>Line:</span> ${pick.currentLine || 'N/A'}
-            </div>
-            
-            <div class="confidence-bar">
-              <div class="conf-header">
-                <span>AI Confidence</span>
-                <span>${pick.confidence}%</span>
+              <div class="game-title">${pick.game}</div>
+              <div class="pick-bet">${pick.bet}</div>
+              <div class="pick-odds">${pick.odds}</div>
+              
+              ${sparkline ? `
+                <div class="sparkline-container">
+                  <svg class="sparkline" viewBox="0 0 100 30" preserveAspectRatio="none">
+                    ${sparkline}
+                  </svg>
+                  <span class="sparkline-label">Line movement</span>
+                </div>
+              ` : ''}
+              
+              <div class="odds-comparison">
+                <span class="best">Best:</span> ${pick.model_breakdown?.best_book || 'Multiple'} | 
+                <span>Line:</span> ${pick.currentLine || 'N/A'}
               </div>
-              <div class="conf-bar">
-                <div class="conf-fill" style="width: ${pick.confidence}%"></div>
+              
+              <div class="confidence-bar">
+                <div class="conf-header">
+                  <span>AI Confidence</span>
+                  <span>${pick.confidence}%</span>
+                </div>
+                <div class="conf-bar">
+                  <div class="conf-fill" style="width: ${pick.confidence}%"></div>
+                </div>
               </div>
-            </div>
-            
-            <div class="agent-scores">
-              ${agentGrades.map(g => `<span class="agent-pill agent-${g.grade.toLowerCase().replace('+', '')}">${g.name}: ${g.grade}</span>`).join('')}
+              
+              <div class="agent-scores">
+                ${agentGrades.map(g => `<span class="agent-pill agent-${g.grade.toLowerCase().replace('+', '')}">${g.name}: ${g.grade}</span>`).join('')}
+              </div>
             </div>
           </div>
         `;
       }).join('');
     }
 
-    // Get agent grades from pick
+    // Render sparkline SVG
+    function renderSparkline(data) {
+      if (!data || data.length < 2) return null;
+      
+      const min = Math.min(...data);
+      const max = Math.max(...data);
+      const range = max - min || 1;
+      
+      const points = data.map((val, i) => {
+        const x = (i / (data.length - 1)) * 100;
+        const y = 30 - ((val - min) / range) * 25 - 2.5;
+        return `${x},${y}`;
+      }).join(' ');
+      
+      const color = data[data.length - 1] > data[0] ? '#4ade80' : '#ef4444';
+      
+      return `<polyline fill="none" stroke="${color}" stroke-width="2" points="${points}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    }
+
+    // Get agent grades
     function getAgentGrades(pick) {
       const mb = pick.model_breakdown || {};
       const grades = [];
@@ -847,12 +1268,28 @@
     }
 
     function extractGrade(text) {
-      if (text.includes('↑') || text.includes('favor')) return 'A';
-      if (text.includes('↓')) return 'B';
-      return 'B+';
+      if (text.includes('strong') || text.includes('Strong')) return 'A';
+      if (text.includes('moderate') || text.includes('Moderate')) return 'B+';
+      return 'B';
     }
 
-    // Show pick detail modal
+    // Share pick
+    async function sharePick(event, pickId) {
+      event.stopPropagation();
+      const pick = allPicks.find(p => p.id === pickId);
+      if (!pick) return;
+      
+      const text = `EdgeBet AI Pick: ${pick.bet} (${pick.odds}) - ${pick.confidence}% confidence, +${pick.edge}% edge`;
+      
+      if (navigator.share) {
+        navigator.share({ title: 'EdgeBet AI Pick', text });
+      } else {
+        navigator.clipboard.writeText(text);
+        showToast('Copied to clipboard!', 'success');
+      }
+    }
+
+    // Pick detail modal
     function showPickDetail(pickId) {
       currentPick = allPicks.find(p => p.id === pickId);
       if (!currentPick) return;
@@ -864,64 +1301,17 @@
         <div style="text-align: center; margin-bottom: 20px;">
           <div style="font-size: 14px; color: #9ca3af; margin-bottom: 4px;">${currentPick.sport} ${currentPick.emoji}</div>
           <div style="font-size: 20px; font-weight: 800; color: #fff;">${currentPick.game}</div>
-          <div style="font-size: 28px; font-weight: 900; color: #22d3ee; margin: 12px 0;">${currentPick.bet}</div>
-          <div style="font-size: 18px; color: #4ade80; font-family: monospace;">${currentPick.odds}</div>
+          <div style="font-size: 28px; font-weight: 900; color: var(--accent); margin: 12px 0;">${currentPick.bet}</div>
+          <div style="font-size: 18px; color: var(--success); font-family: monospace;">${currentPick.odds}</div>
         </div>
         
         <div class="agent-breakdown">
-          <div class="agent-row">
-            <div class="agent-icon" style="background: rgba(34,211,238,0.15);">💰</div>
-            <div class="agent-info">
-              <div class="agent-name">Value Agent</div>
-              <div class="agent-desc">${mb.value || 'Analyzing line value...'}</div>
-            </div>
-            <div class="agent-grade agent-a">${mb.value ? mb.value.split(' ')[0] : 'B+'}</div>
-          </div>
-          
-          <div class="agent-row">
-            <div class="agent-icon" style="background: rgba(167,139,250,0.15);">📊</div>
-            <div class="agent-info">
-              <div class="agent-name">Line Movement</div>
-              <div class="agent-desc">${mb.line_movement || 'Monitoring line shifts...'}</div>
-            </div>
-            <div class="agent-grade agent-b">B+</div>
-          </div>
-          
-          <div class="agent-row">
-            <div class="agent-icon" style="background: rgba(251,146,60,0.15);">👥</div>
-            <div class="agent-info">
-              <div class="agent-name">Public Money</div>
-              <div class="agent-desc">${mb.public_money || 'Analyzing public betting...'}</div>
-            </div>
-            <div class="agent-grade agent-b">B</div>
-          </div>
-          
-          <div class="agent-row">
-            <div class="agent-icon" style="background: rgba(74,222,128,0.15);">🎯</div>
-            <div class="agent-info">
-              <div class="agent-name">Sharp Money</div>
-              <div class="agent-desc">${mb.sharp_action || 'Tracking smart money...'}</div>
-            </div>
-            <div class="agent-grade agent-a">A-</div>
-          </div>
-          
-          <div class="agent-row">
-            <div class="agent-icon" style="background: rgba(239,68,68,0.15);">⚕️</div>
-            <div class="agent-info">
-              <div class="agent-name">Injury Scout</div>
-              <div class="agent-desc">${mb.injury_report || 'Monitoring injury news...'}</div>
-            </div>
-            <div class="agent-grade agent-b">B+</div>
-          </div>
-          
-          <div class="agent-row">
-            <div class="agent-icon" style="background: rgba(156,163,175,0.15);">📅</div>
-            <div class="agent-info">
-              <div class="agent-name">Situational</div>
-              <div class="agent-desc">${mb.situational || 'Analyzing context...'}</div>
-            </div>
-            <div class="agent-grade agent-b">B</div>
-          </div>
+          <div class="agent-row"><div class="agent-icon" style="background: rgba(34,211,238,0.15);">💰</div><div class="agent-info"><div class="agent-name">Value Agent</div><div class="agent-desc">${mb.value || 'Analyzing...'}</div></div><div class="agent-grade agent-a">${mb.value ? mb.value.split(' ')[0] : 'B+'}</div></div>
+          <div class="agent-row"><div class="agent-icon" style="background: rgba(167,139,250,0.15);">📊</div><div class="agent-info"><div class="agent-name">Line Movement</div><div class="agent-desc">${mb.line_movement || 'Monitoring...'}</div></div><div class="agent-grade agent-b">B+</div></div>
+          <div class="agent-row"><div class="agent-icon" style="background: rgba(251,146,60,0.15);">👥</div><div class="agent-info"><div class="agent-name">Public Money</div><div class="agent-desc">${mb.public_money || 'Analyzing...'}</div></div><div class="agent-grade agent-b">B</div></div>
+          <div class="agent-row"><div class="agent-icon" style="background: rgba(74,222,128,0.15);">🎯</div><div class="agent-info"><div class="agent-name">Sharp Money</div><div class="agent-desc">${mb.sharp_action || 'Tracking...'}</div></div><div class="agent-grade agent-a">A-</div></div>
+          <div class="agent-row"><div class="agent-icon" style="background: rgba(239,68,68,0.15);">⚕️</div><div class="agent-info"><div class="agent-name">Injury Scout</div><div class="agent-desc">${mb.injury_report || 'Monitoring...'}</div></div><div class="agent-grade agent-b">B+</div></div>
+          <div class="agent-row"><div class="agent-icon" style="background: rgba(156,163,175,0.15);">📅</div><div class="agent-info"><div class="agent-name">Situational</div><div class="agent-desc">${mb.situational || 'Analyzing...'}</div></div><div class="agent-grade agent-b">B</div></div>
         </div>
         
         <div class="consensus-box">
@@ -944,7 +1334,131 @@
       }
     }
 
-    // Bet Tracker Functions
+    // Arbitrage
+    async function loadArbitrage() {
+      const btn = document.getElementById('arbBtn');
+      const container = document.getElementById('arb-container');
+      
+      btn.disabled = true;
+      btn.textContent = 'Scanning...';
+      container.innerHTML = '<div class="loading"><div class="spinner"></div><div>Finding arbitrage opportunities...</div></div>';
+      
+      try {
+        const response = await fetch(BACKEND + '/arbitrage');
+        const data = await response.json();
+        allArbs = data.opportunities || [];
+        renderArbitrage(allArbs);
+      } catch (err) {
+        container.innerHTML = '<div class="error">Failed to load arbitrage data. Try again.</div>';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🔥 FIND ARBS';
+      }
+    }
+
+    function renderArbitrage(arbs) {
+      const container = document.getElementById('arb-container');
+      
+      if (!arbs || arbs.length === 0) {
+        container.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><div>No arbitrage opportunities right now</div><div style="font-size: 14px; margin-top: 8px;">Arbs appear when books have different lines</div></div>';
+        return;
+      }
+      
+      container.innerHTML = arbs.map((arb, i) => `
+        <div class="arb-card animate-in" style="animation-delay: ${i * 0.1}s">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="font-size: 14px; color: #9ca3af;">${arb.sport} • ${arb.game}</div>
+            <div class="arb-profit">+${arb.profit}%</div>
+          </div>
+          <div style="font-size: 12px; color: #6b7280; margin-bottom: 12px;">Risk-free profit by betting both sides</div>
+          <div class="arb-books">
+            <div class="arb-book">
+              <div class="arb-book-name">${arb.awayBook}</div>
+              <div class="arb-book-odds">${arb.awayOdds}</div>
+              <div style="font-size: 10px; color: #6b7280;">Bet $${arb.stake?.away || '100'}</div>
+            </div>
+            <div style="color: #6b7280;">+</div>
+            <div class="arb-book">
+              <div class="arb-book-name">${arb.homeBook}</div>
+              <div class="arb-book-odds">${arb.homeOdds}</div>
+              <div style="font-size: 10px; color: #6b7280;">Bet $${arb.stake?.home || '100'}</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function showArbitrageModal() {
+      renderArbitrageModal(allArbs);
+      document.getElementById('arbModal').classList.add('active');
+    }
+
+    function renderArbitrageModal(arbs) {
+      const container = document.getElementById('arb-modal-content');
+      if (!arbs || arbs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No arbitrage opportunities found</div>';
+        return;
+      }
+      renderArbitrage(arbs);
+    }
+
+    function closeArbModal(e) {
+      if (!e || e.target.id === 'arbModal') {
+        document.getElementById('arbModal').classList.remove('active');
+      }
+    }
+
+    // Player Props
+    async function loadProps() {
+      const btn = document.getElementById('propsBtn');
+      const container = document.getElementById('props-container');
+      const sport = document.getElementById('propSportFilter').value;
+      
+      btn.disabled = true;
+      btn.textContent = 'Scanning...';
+      container.innerHTML = '<div class="loading"><div class="spinner"></div><div>Scanning player props...</div></div>';
+      
+      try {
+        const response = await fetch(`${BACKEND}/props?sport=${sport}`);
+        const data = await response.json();
+        renderProps(data.props || []);
+      } catch (err) {
+        container.innerHTML = '<div class="error">Failed to load props. Try again.</div>';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🔍 SCAN PROPS';
+      }
+    }
+
+    function renderProps(props) {
+      const container = document.getElementById('props-container');
+      
+      if (!props || props.length === 0) {
+        container.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg><div>No props found</div></div>';
+        return;
+      }
+      
+      container.innerHTML = props.map((prop, i) => `
+        <div class="prop-card animate-in" style="animation-delay: ${i * 0.05}s">
+          <div class="pick-header">
+            <div class="sport-tag"><span>${prop.emoji}</span><span>${prop.sport}</span></div>
+            <div class="edge-badge">+${prop.edge}% EDGE</div>
+          </div>
+          <div class="prop-player">${prop.player}</div>
+          <div class="prop-market">${prop.market.replace(/_/g, ' ').toUpperCase()}</div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="prop-line">${prop.side} ${prop.line}</div>
+            <div style="font-size: 14px; color: var(--success); font-family: monospace;">${prop.bestPrice > 0 ? '+' : ''}${prop.bestPrice}</div>
+          </div>
+          <div class="confidence-bar" style="margin-top: 12px;">
+            <div class="conf-header"><span>Confidence</span><span>${prop.confidence}%</span></div>
+            <div class="conf-bar"><div class="conf-fill" style="width: ${prop.confidence}%"></div></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Bet Tracker
     function getTrackedBets() {
       return JSON.parse(localStorage.getItem('edgebet_tracked') || '[]');
     }
@@ -961,12 +1475,10 @@
       
       if (idx >= 0) {
         bets.splice(idx, 1);
+        showToast('Pick removed from tracker');
       } else {
-        bets.push({
-          ...currentPick,
-          trackedAt: new Date().toISOString(),
-          result: null
-        });
+        bets.push({ ...currentPick, trackedAt: new Date().toISOString(), result: null });
+        showToast('Pick tracked!', 'success');
       }
       
       localStorage.setItem('edgebet_tracked', JSON.stringify(bets));
@@ -977,7 +1489,6 @@
       const bets = getTrackedBets();
       const container = document.getElementById('tracker-bets');
       
-      // Update stats
       const wins = bets.filter(b => b.result === 'win').length;
       const losses = bets.filter(b => b.result === 'loss').length;
       const pushes = bets.filter(b => b.result === 'push').length;
@@ -985,20 +1496,13 @@
       document.getElementById('tracker-wins').textContent = wins;
       document.getElementById('tracker-losses').textContent = losses;
       
-      // Simple profit calc (assuming -110 odds for now)
       const profit = (wins * 100) - ((wins + losses + pushes) * 110);
       const profitEl = document.getElementById('tracker-profit');
       profitEl.textContent = (profit >= 0 ? '+' : '') + '$' + profit;
-      profitEl.style.color = profit >= 0 ? '#4ade80' : '#ef4444';
+      profitEl.style.color = profit >= 0 ? 'var(--success)' : 'var(--danger)';
       
       if (bets.length === 0) {
-        container.innerHTML = `
-          <div class="empty-state">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-            <div>No tracked bets yet</div>
-            <div style="font-size: 14px; margin-top: 8px;">Tap any pick to track it</div>
-          </div>
-        `;
+        container.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><div>No tracked bets yet</div><div style="font-size: 14px; margin-top: 8px;">Tap any pick to track it</div></div>';
         return;
       }
       
@@ -1010,7 +1514,7 @@
               <div class="bet-pick">${bet.bet}</div>
             </div>
             <div style="text-align: right;">
-              <div style="font-size: 14px; color: #4ade80; font-family: monospace;">${bet.odds}</div>
+              <div style="font-size: 14px; color: var(--success); font-family: monospace;">${bet.odds}</div>
               <div style="font-size: 11px; color: #6b7280;">${bet.edge}% edge</div>
             </div>
           </div>
@@ -1036,47 +1540,7 @@
       }
     }
 
-    // Chat functionality
-    const chatResponses = {
-      'how does': 'The 7-agent system analyzes: 1) Value (strips vig), 2) Line Movement, 3) Public Money %, 4) Sharp Money signals, 5) Injury reports, 6) Situational spots, 7) Consensus scoring. All for $0 AI cost!',
-      'what is edge': 'Edge is the mathematical advantage you have over the sportsbook. We find lines where the true probability is higher than the implied odds. Even a 2-3% edge compounds over hundreds of bets.',
-      'bankroll': 'Flat bet 1-2% of your bankroll per play until you have 300+ bets of data. Never chase losses. With our edge, +5-15% ROI is realistic long-term.',
-      'sharp': 'Sharp money = professional bettors. We detect when sharps are betting against the public. If 70% public is on Team A but line moves toward Team B, sharps likely like Team B.',
-      'public': 'Public money = recreational bettors. Fading the public (betting against them) works because books shade lines toward popular teams, creating value on the other side.',
-      'parlay': 'Parlays increase variance but also multiply edge. With positive edge bets, parlays actually increase expected value - but you need a bigger bankroll for the swings.',
-      'units': 'A unit = 1% of your bankroll. If you have $1000 bankroll, 1 unit = $10. Never bet more than 2-3 units on any single play.',
-      'steam': 'Steam moves = sudden, sharp line movements across multiple books. Usually indicates smart money or breaking news (injuries, lineup changes).',
-      'clv': 'Closing Line Value (CLV) = beating the final line. If you bet -3 and it closes -4, you have positive CLV. Long-term, CLV is the best predictor of profitability.',
-      'roi': 'ROI = Return on Investment. A 5% ROI means you profit $5 for every $100 wagered. Professional bettors aim for 3-7% ROI.',
-      'default': 'Hit the Scan tab to run the 7-agent analysis on today\'s games. For bankroll questions: flat bet 1-2% per play. The edge is small but real - trust the math!'
-    };
-
-    function getChatResponse(message) {
-      const lower = message.toLowerCase();
-      for (const [key, response] of Object.entries(chatResponses)) {
-        if (lower.includes(key)) return response;
-      }
-      return chatResponses.default;
-    }
-
-    function addChatMessage(text, isUser = false) {
-      const container = document.getElementById('chat-container');
-      const messageDiv = document.createElement('div');
-      messageDiv.style.cssText = 'margin-bottom: 12px; text-align: ' + (isUser ? 'right' : 'left') + ';';
-      
-      const name = isUser ? 'You' : 'EdgeBet AI';
-      const color = isUser ? '#a78bfa' : '#22d3ee';
-      const bg = isUser ? 'rgba(167,139,250,0.1)' : 'rgba(34,211,238,0.1)';
-      
-      messageDiv.innerHTML = `
-        <div style="font-size: 12px; color: ${color}; margin-bottom: 4px;">${name}</div>
-        <div style="font-size: 14px; color: #fff; background: ${bg}; padding: 12px; border-radius: 12px; display: inline-block; max-width: 80%; text-align: left;">${text}</div>
-      `;
-      
-      container.appendChild(messageDiv);
-      container.scrollTop = container.scrollHeight;
-    }
-
+    // Chat
     function sendChat() {
       const input = document.getElementById('chat-input');
       const message = input.value.trim();
@@ -1085,9 +1549,26 @@
       addChatMessage(message, true);
       input.value = '';
       
-      setTimeout(() => {
-        addChatMessage(getChatResponse(message));
-      }, 500);
+      fetch(BACKEND + '/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+      })
+      .then(r => r.json())
+      .then(data => addChatMessage(data.reply))
+      .catch(() => addChatMessage(getLocalResponse(message)));
+    }
+
+    function addChatMessage(text, isUser = false) {
+      const container = document.getElementById('chat-container');
+      const div = document.createElement('div');
+      div.className = 'chat-message' + (isUser ? ' user' : '');
+      div.innerHTML = `
+        <div style="font-size: 12px; color: ${isUser ? 'var(--accent2)' : 'var(--accent)'}; margin-bottom: 4px;">${isUser ? 'You' : 'EdgeBet AI'}</div>
+        <div class="chat-bubble ${isUser ? 'user' : 'ai'}">${text}</div>
+      `;
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
     }
 
     function quickChat(message) {
@@ -1095,15 +1576,22 @@
       sendChat();
     }
 
-    // Allow Enter key to send
+    function getLocalResponse(message) {
+      const lower = message.toLowerCase();
+      if (lower.includes('arb')) return 'Arbitrage = bet both sides at different books for guaranteed profit. Check the Arbs tab!';
+      if (lower.includes('prop')) return 'Player props are softer markets. We scan them with the same 7-agent system. Check the Props tab!';
+      return 'Hit Scan to find picks with positive expected value. The 7-agent system analyzes thousands of data points.';
+    }
+
+    // Keyboard shortcuts
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('chat-input').addEventListener('keypress', (e) => {
+      document.getElementById('chat-input')?.addEventListener('keypress', e => {
         if (e.key === 'Enter') sendChat();
       });
+      
+      // Auto-scan on load
+      scanPicks();
     });
-
-    // Auto-scan on load
-    window.onload = scanPicks;
   </script>
 </body>
 </html>
