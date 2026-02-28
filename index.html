@@ -59,7 +59,11 @@
       50% { opacity: 0.3; }
     }
     .content {
-      padding: 16px;
+      padding: 16px 16px 90px;
+      display: none;
+    }
+    .content.active {
+      display: block;
     }
     .scan-btn {
       width: 100%;
@@ -221,8 +225,30 @@
       width: 24px;
       height: 24px;
     }
-    .content {
-      padding: 16px 16px 90px;
+    .page-title {
+      font-size: 24px;
+      font-weight: 900;
+      margin-bottom: 20px;
+      color: #fff;
+    }
+    .placeholder-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 40px 20px;
+      text-align: center;
+      color: #6b7280;
+    }
+    .placeholder-card svg {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 16px;
+      color: #22d3ee;
+    }
+    .coming-soon {
+      font-size: 14px;
+      color: #9ca3af;
+      margin-top: 8px;
     }
   </style>
 </head>
@@ -236,33 +262,77 @@
       </div>
     </div>
 
-    <div class="content">
+    <!-- PICKS PAGE -->
+    <div id="picks-page" class="content active">
       <button class="scan-btn" onclick="scanPicks()" id="scanBtn">
         ⚡ SCAN FOR PICKS
       </button>
-
       <div id="error-container"></div>
       <div id="picks-container"></div>
     </div>
 
+    <!-- PARLAY PAGE -->
+    <div id="parlay-page" class="content">
+      <div class="page-title">Parlay Builder</div>
+      <div class="placeholder-card">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        <div>Build your parlay here</div>
+        <div class="coming-soon">Select picks from the Picks tab to add them here</div>
+      </div>
+    </div>
+
+    <!-- TRACKER PAGE -->
+    <div id="tracker-page" class="content">
+      <div class="page-title">Bet Tracker</div>
+      <div class="placeholder-card">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8v8m-4-5v5m-4-2v2M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <div>Track your bets</div>
+        <div class="coming-soon">Monitor your wins, losses, and profit</div>
+      </div>
+    </div>
+
+    <!-- CHAT PAGE -->
+    <div id="chat-page" class="content">
+      <div class="page-title">AI Chat</div>
+      <div class="placeholder-card">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        <div>Chat with EdgeBet AI</div>
+        <div class="coming-soon">Ask questions about picks, strategy, and more</div>
+      </div>
+    </div>
+
+    <!-- MORE PAGE -->
+    <div id="more-page" class="content">
+      <div class="page-title">More</div>
+      <div class="placeholder-card" style="margin-bottom: 12px;">
+        <div style="font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px;">Current Plan</div>
+        <div style="font-size: 24px; font-weight: 900; color: #22d3ee;">Free</div>
+        <div style="font-size: 12px; color: #9ca3af; margin-top: 4px;">2 picks per day</div>
+      </div>
+      <button class="scan-btn" style="margin-top: 20px;">
+        Upgrade to Pro
+      </button>
+    </div>
+
+    <!-- NAVIGATION -->
     <div class="nav">
-      <button class="nav-item active">
+      <button class="nav-item active" onclick="showPage('picks')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         <span>Picks</span>
       </button>
-      <button class="nav-item">
+      <button class="nav-item" onclick="showPage('parlay')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
         <span>Parlay</span>
       </button>
-      <button class="nav-item">
+      <button class="nav-item" onclick="showPage('tracker')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8v8m-4-5v5m-4-2v2M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
         <span>Tracker</span>
       </button>
-      <button class="nav-item">
+      <button class="nav-item" onclick="showPage('chat')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
         <span>Chat</span>
       </button>
-      <button class="nav-item">
+      <button class="nav-item" onclick="showPage('more')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         <span>More</span>
       </button>
@@ -272,6 +342,24 @@
   <script>
     const BACKEND = "https://edgebet-backend-1.onrender.com";
 
+    // Navigation
+    function showPage(pageName) {
+      // Hide all pages
+      document.querySelectorAll('.content').forEach(page => {
+        page.classList.remove('active');
+      });
+      
+      // Show selected page
+      document.getElementById(pageName + '-page').classList.add('active');
+      
+      // Update nav buttons
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.currentTarget.classList.add('active');
+    }
+
+    // Scan for picks
     async function scanPicks() {
       const btn = document.getElementById('scanBtn');
       const container = document.getElementById('picks-container');
@@ -289,9 +377,6 @@
       `;
       
       try {
-        console.log('Fetching from:', BACKEND + '/scan');
-        
-        // Add timeout to fetch
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
         
@@ -300,14 +385,11 @@
         });
         clearTimeout(timeoutId);
         
-        console.log('Response status:', response.status);
-        
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
         const data = await response.json();
-        console.log('Data received:', data);
         
         if (data.error) {
           throw new Error(data.error + (data.hint ? ' - ' + data.hint : ''));
@@ -353,7 +435,6 @@
         `).join('');
         
       } catch (err) {
-        console.error('Error:', err);
         if (err.name === 'AbortError') {
           errorContainer.innerHTML = `<div class="error">Request timed out. Backend may be sleeping (free tier). Try again in 10 seconds.</div>`;
         } else {
