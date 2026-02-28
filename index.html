@@ -230,7 +230,16 @@
       
       try {
         console.log('Fetching from:', BACKEND + '/scan');
-        const response = await fetch(BACKEND + '/scan');
+        
+        // Add timeout to fetch
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
+        const response = await fetch(BACKEND + '/scan', {
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
         console.log('Response status:', response.status);
         
         if (!response.ok) {
@@ -285,7 +294,11 @@
         
       } catch (err) {
         console.error('Error:', err);
-        errorContainer.innerHTML = `<div class="error">Error: ${err.message}</div>`;
+        if (err.name === 'AbortError') {
+          errorContainer.innerHTML = `<div class="error">Request timed out. Backend may be sleeping (free tier). Try again in 10 seconds.</div>`;
+        } else {
+          errorContainer.innerHTML = `<div class="error">Error: ${err.message}</div>`;
+        }
         container.innerHTML = '';
       } finally {
         btn.disabled = false;
