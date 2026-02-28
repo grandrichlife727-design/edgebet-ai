@@ -60,7 +60,25 @@
       z-index: 50;
     }
     
-    .logo { font-size: 20px; font-weight: 900; background: linear-gradient(90deg, var(--accent), var(--accent2) 60%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .logo { 
+      font-size: 22px; 
+      font-weight: 900; 
+      background: linear-gradient(90deg, var(--accent), var(--accent2) 60%); 
+      -webkit-background-clip: text; 
+      -webkit-text-fill-color: transparent;
+      position: relative;
+      letter-spacing: -0.5px;
+    }
+    .logo::after {
+      content: '⚡';
+      position: absolute;
+      right: -20px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      -webkit-text-fill-color: var(--accent);
+      filter: drop-shadow(0 0 6px var(--accent));
+    }
     .live-badge { display: flex; align-items: center; gap: 5px; background: rgba(74,222,128,0.09); border: 1px solid rgba(74,222,128,0.2); border-radius: 99px; padding: 4px 10px; font-size: 11px; color: var(--success); }
     .live-dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; animation: pulse 1.5s infinite; }
     
@@ -220,9 +238,39 @@
       padding: 4px 8px;
       white-space: nowrap;
       min-width: 50px;
+      transition: all 0.3s ease;
+      position: relative;
     }
-    .nav-item:hover, .nav-item.active { color: var(--accent); }
-    .nav-item svg { width: 22px; height: 22px; }
+    .nav-item:hover { color: var(--accent); transform: translateY(-2px); }
+    .nav-item.active { 
+      color: var(--accent); 
+    }
+    .nav-item.active svg {
+      filter: drop-shadow(0 0 8px rgba(34,211,238,0.6));
+      transform: scale(1.1);
+    }
+    .nav-item svg { 
+      width: 24px; 
+      height: 24px; 
+      transition: all 0.3s ease;
+    }
+    .nav-item::before {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 4px;
+      background: var(--accent);
+      border-radius: 50%;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      box-shadow: 0 0 10px var(--accent);
+    }
+    .nav-item.active::before {
+      opacity: 1;
+    }
     
     /* Tools Grid */
     .tools-grid {
@@ -238,10 +286,43 @@
       padding: 20px;
       text-align: center;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
     }
-    .tool-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-    .tool-icon { font-size: 32px; margin-bottom: 8px; }
+    .tool-card:hover { 
+      border-color: var(--accent); 
+      transform: translateY(-3px); 
+      box-shadow: 0 10px 30px rgba(34,211,238,0.1);
+    }
+    .tool-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .tool-card:hover::before {
+      opacity: 1;
+    }
+    .tool-icon { 
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 44px;
+    }
+    .tool-icon svg {
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+      transition: transform 0.3s ease;
+    }
+    .tool-card:hover .tool-icon svg {
+      transform: scale(1.1);
+    }
     .tool-name { font-size: 13px; font-weight: 700; }
     .tool-desc { font-size: 11px; color: #6b7280; margin-top: 4px; }
     
@@ -274,42 +355,100 @@
       <div class="page-title">Betting Tools</div>
       <div class="tools-grid">
         <div class="tool-card" onclick="showToolPage('ev')">
-          <div class="tool-icon">🧮</div>
+          <div class="tool-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="url(#toolGrad1)" stroke-width="1.5">
+              <defs><linearGradient id="toolGrad1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#22d3ee"/><stop offset="100%" style="stop-color:#a78bfa"/></linearGradient></defs>
+              <rect x="2" y="4" width="20" height="16" rx="2"/>
+              <path d="M7 15l3-3 3 3 6-6"/>
+              <circle cx="19" cy="9" r="1.5" fill="url(#toolGrad1)" stroke="none"/>
+            </svg>
+          </div>
           <div class="tool-name">EV Calculator</div>
           <div class="tool-desc">Find expected value</div>
         </div>
         <div class="tool-card" onclick="showToolPage('parlay')">
-          <div class="tool-icon">🔗</div>
+          <div class="tool-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="url(#toolGrad2)" stroke-width="1.5">
+              <defs><linearGradient id="toolGrad2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#22d3ee"/><stop offset="100%" style="stop-color:#a78bfa"/></linearGradient></defs>
+              <circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
+              <circle cx="6" cy="18" r="3"/><circle cx="18" cy="18" r="3"/>
+              <line x1="9" y1="6" x2="15" y2="6"/><line x1="9" y1="18" x2="15" y2="18"/>
+              <line x1="6" y1="9" x2="6" y2="15"/><line x1="18" y1="9" x2="18" y2="15"/>
+            </svg>
+          </div>
           <div class="tool-name">Parlay Builder</div>
           <div class="tool-desc">Build +EV parlays</div>
         </div>
         <div class="tool-card" onclick="showToolPage('lines')">
-          <div class="tool-icon">📊</div>
+          <div class="tool-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="url(#toolGrad3)" stroke-width="1.5">
+              <defs><linearGradient id="toolGrad3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#22d3ee"/><stop offset="100%" style="stop-color:#a78bfa"/></linearGradient></defs>
+              <rect x="3" y="3" width="7" height="7" rx="1"/>
+              <rect x="14" y="3" width="7" height="7" rx="1"/>
+              <rect x="14" y="14" width="7" height="7" rx="1"/>
+              <rect x="3" y="14" width="7" height="7" rx="1"/>
+              <path d="M6 10v4M10 6h4M14 14h4M10 18H6" stroke-dasharray="2 2"/>
+            </svg>
+          </div>
           <div class="tool-name">Line Shopping</div>
           <div class="tool-desc">Compare all books</div>
         </div>
         <div class="tool-card" onclick="showToolPage('steam')">
-          <div class="tool-icon">⚡</div>
+          <div class="tool-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="url(#toolGrad4)" stroke-width="1.5">
+              <defs><linearGradient id="toolGrad4" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#fb923c"/><stop offset="100%" style="stop-color:#f59e0b"/></linearGradient></defs>
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10" fill="url(#toolGrad4)" stroke="none"/>
+            </svg>
+          </div>
           <div class="tool-name">Steam Moves</div>
           <div class="tool-desc">Track sharp action</div>
         </div>
         <div class="tool-card" onclick="showToolPage('weather')">
-          <div class="tool-icon">🌤️</div>
+          <div class="tool-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="url(#toolGrad5)" stroke-width="1.5">
+              <defs><linearGradient id="toolGrad5" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#22d3ee"/><stop offset="100%" style="stop-color:#a78bfa"/></linearGradient></defs>
+              <path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/>
+              <line x1="8" y1="12" x2="8.01" y2="12" stroke-width="3"/>
+              <line x1="12" y1="8" x2="12.01" y2="8" stroke-width="3"/>
+            </svg>
+          </div>
           <div class="tool-name">Weather</div>
           <div class="tool-desc">NFL/MLB impacts</div>
         </div>
         <div class="tool-card" onclick="showToolPage('journal')">
-          <div class="tool-icon">📝</div>
+          <div class="tool-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="url(#toolGrad6)" stroke-width="1.5">
+              <defs><linearGradient id="toolGrad6" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#22d3ee"/><stop offset="100%" style="stop-color:#a78bfa"/></linearGradient></defs>
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="8" y1="13" x2="16" y2="13"/>
+              <line x1="8" y1="17" x2="13" y2="17"/>
+            </svg>
+          </div>
           <div class="tool-name">Journal</div>
           <div class="tool-desc">Track your bets</div>
         </div>
         <div class="tool-card" onclick="showToolPage('picks')">
-          <div class="tool-icon">🎯</div>
+          <div class="tool-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="url(#toolGrad7)" stroke-width="1.5">
+              <defs><linearGradient id="toolGrad7" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#4ade80"/><stop offset="100%" style="stop-color:#22d3ee"/></linearGradient></defs>
+              <circle cx="12" cy="12" r="10"/>
+              <circle cx="12" cy="12" r="6"/>
+              <circle cx="12" cy="12" r="2" fill="url(#toolGrad7)" stroke="none"/>
+            </svg>
+          </div>
           <div class="tool-name">AI Picks</div>
           <div class="tool-desc">7-agent system</div>
         </div>
         <div class="tool-card" onclick="showToolPage('arb')">
-          <div class="tool-icon">💰</div>
+          <div class="tool-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="url(#toolGrad8)" stroke-width="1.5">
+              <defs><linearGradient id="toolGrad8" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#fb923c"/><stop offset="100%" style="stop-color:#f59e0b"/></linearGradient></defs>
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v12M6 12h12" stroke-width="2"/>
+              <circle cx="12" cy="12" r="3" fill="url(#toolGrad8)" stroke="none"/>
+            </svg>
+          </div>
           <div class="tool-name">Arbitrage</div>
           <div class="tool-desc">Risk-free profits</div>
         </div>
@@ -444,23 +583,86 @@
     <!-- NAVIGATION -->
     <div class="nav">
       <button class="nav-item active" onclick="showPage('home', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="url(#iconGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <defs>
+            <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#22d3ee"/>
+              <stop offset="100%" style="stop-color:#a78bfa"/>
+            </linearGradient>
+          </defs>
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+          <circle cx="12" cy="7" r="1.5" fill="url(#iconGradient)" stroke="none"/>
+        </svg>
         <span>Home</span>
       </button>
       <button class="nav-item" onclick="showPage('ev', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="url(#iconGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <defs>
+            <linearGradient id="iconGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#22d3ee"/>
+              <stop offset="100%" style="stop-color:#a78bfa"/>
+            </linearGradient>
+          </defs>
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <path d="M7 15l3-3 3 3 6-6"/>
+          <circle cx="19" cy="9" r="1.5" fill="url(#iconGradient2)" stroke="none"/>
+          <line x1="6" y1="8" x2="6.01" y2="8" stroke-width="3"/>
+        </svg>
         <span>EV</span>
       </button>
       <button class="nav-item" onclick="showPage('parlay', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="url(#iconGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <defs>
+            <linearGradient id="iconGradient3" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#22d3ee"/>
+              <stop offset="100%" style="stop-color:#a78bfa"/>
+            </linearGradient>
+          </defs>
+          <circle cx="6" cy="6" r="3"/>
+          <circle cx="18" cy="6" r="3"/>
+          <circle cx="6" cy="18" r="3"/>
+          <circle cx="18" cy="18" r="3"/>
+          <line x1="9" y1="6" x2="15" y2="6"/>
+          <line x1="9" y1="18" x2="15" y2="18"/>
+          <line x1="6" y1="9" x2="6" y2="15"/>
+          <line x1="18" y1="9" x2="18" y2="15"/>
+          <circle cx="12" cy="12" r="2" fill="url(#iconGradient3)" stroke="none"/>
+        </svg>
         <span>Parlay</span>
       </button>
       <button class="nav-item" onclick="showPage('picks', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="url(#iconGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <defs>
+            <linearGradient id="iconGradient4" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#22d3ee"/>
+              <stop offset="100%" style="stop-color:#a78bfa"/>
+            </linearGradient>
+          </defs>
+          <circle cx="12" cy="12" r="10"/>
+          <circle cx="12" cy="12" r="6"/>
+          <circle cx="12" cy="12" r="2" fill="url(#iconGradient4)" stroke="none"/>
+          <line x1="12" y1="2" x2="12" y2="6"/>
+          <line x1="12" y1="18" x2="12" y2="22"/>
+          <line x1="2" y1="12" x2="6" y2="12"/>
+          <line x1="18" y1="12" x2="22" y2="12"/>
+        </svg>
         <span>Picks</span>
       </button>
       <button class="nav-item" onclick="showPage('journal', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="url(#iconGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <defs>
+            <linearGradient id="iconGradient5" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#22d3ee"/>
+              <stop offset="100%" style="stop-color:#a78bfa"/>
+            </linearGradient>
+          </defs>
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="8" y1="13" x2="16" y2="13"/>
+          <line x1="8" y1="17" x2="13" y2="17"/>
+          <circle cx="16" cy="17" r="1.5" fill="url(#iconGradient5)" stroke="none"/>
+        </svg>
         <span>Journal</span>
       </button>
     </div>
